@@ -1,0 +1,30 @@
+Tool Type:            1
+Tool Subtype:         3
+Tool Revision:        0
+Tool Date:            2019/07/17
+Seq Number:           000
+Max Angle:            90
+Num Markers:          4
+Min Markers:          3
+Max 3D Error:         2.00
+Min Spread 1:         0.00
+Min Spread 2:         0.00
+Min Spread 3:         0.00
+Manufacturer:         VU          
+Part Number:          cochleaFixture      
+Enhanced Alg Flags:   128
+Marker type:          41
+
+Marker Positions
+----------------
+    61.35       -8.79       -5.69
+   -69.16       56.05       -5.74
+     8.54       74.45       -5.64
+    61.02       57.70       -5.77
+
+Marker Normals
+--------------
+  -0.0009     -0.0012      1.0000
+  -0.0009     -0.0012      1.0000
+  -0.0009     -0.0012      1.0000
+  -0.0009     -0.0012      1.0000

@@ -1,0 +1,70 @@
+VUMIPLAB
+CIP 5.5.4
+PREDICTION FILE
+0100
+
+[COMMENTS]
+Exported on: Fri Aug 16 10:52:43 2019
+Version: 3.6.3
+
+[IDENTIFICATION]
+// DICOM tag of Patient ID: 0010-0020, Study UID(optional): 0020-000D, Series UID: 0020-000E
+// Image Info: DimX DimY DimZ VszX VszY VszZ OriX OriY OriZ DataType(optional) BytOrder(opt) HdrSize(opt) Modality(opt) Min(opt) Max(opt)
+
+Plan       UID:  1689743890476
+
+I1   Patient ID:  20190815
+I1   Study  UID:  1.2.826.0.1.3680043.2.594.2110689004.619178107.2506.305806
+I1   Series UID:  1.2.826.0.1.3680043.2.594.2110689004.619178107.2507.532394.1
+I1   IMAGE INFO:  900 900 624 0.200000 0.200000 0.200000 1 2 -3 2 1 0 CT -1000.000000 7190.000000
+I1        ALIAS:  Target
+
+REF IMAGE INFO:  I1
+
+[TRANSFORMATION REF]  // 4x4 world matrix mapping points from world to REF
+     1.0000000     0.0000000     0.0000000     0.0000000
+     0.0000000     1.0000000     0.0000000     0.0000000
+     0.0000000     0.0000000     1.0000000     0.0000000
+     0.0000000     0.0000000     0.0000000     1.0000000
+
+[TRANSFORMATION I1->REF]  // 4x4 world matrix mapping points from REF to I1
+     1.0000000     0.0000000     0.0000000     0.0000000
+     0.0000000     1.0000000     0.0000000     0.0000000
+     0.0000000     0.0000000     1.0000000     0.0000000
+     0.0000000     0.0000000     0.0000000     1.0000000
+
+//     1.0000000     0.0000000     0.0000000     0.0000000
+//     0.0000000     1.0000000     0.0000000     0.0000000
+//     0.0000000     0.0000000     1.0000000     0.0000000
+//     0.0000000     0.0000000     0.0000000     1.0000000
+
+[ANATOMY]                 // AC, PC, Mid-plane point in patient coordinates
+    89.90000     74.90000     62.30000 
+    89.90000    104.90000     62.30000 
+    89.90000     89.90000      2.30000 
+
+[MARKER]                // one marker set per line, base (anchor) followed by optional tip (marker) in patient coordinates
+    28.49703    116.87132     97.63493     43.77098    115.53372     98.11752 
+    27.51086    114.25709     31.73878     26.68050     99.01781     33.28501 
+   157.28568    107.47253     30.71640    171.34085    108.99492     36.67038 
+    79.31476    110.58193     14.02000     79.31476    110.58193      4.02000 
+
+[TRAJECTORY]              // one trajectory per line, target point followed by optional entry point in patient coordinates, with id, diameter, color, type, and lead model
+    88.59041     79.15869     95.97000     88.41825     68.17316     96.64252  "Target"  1.59 " 248 248  64" "" "" // 0.00 0.00 0.00
+//     -0.96876      0.24750      0.01564      1.30959 
+//      0.00000      0.06307     -0.99801    -10.74131 
+//     -0.24799     -0.96683     -0.06110    -33.67000 
+//      0.00000      0.00000      0.00000      1.00000 
+//     -0.96876     -0.00000     -0.24799     -7.08120 
+//      0.24750      0.06307     -0.96683    -32.19998 
+//      0.01564     -0.99801     -0.06110    -12.79753 
+//     -0.00000      0.00000      0.00000      1.00000 
+
+[CIP TRANSFORMATIONS]
+Atlas to Preop Transformation (Right) =
+    -0.6397500     0.7297300    -0.2412750    31.0044003
+     0.7685830     0.6074100    -0.2008310   -12.9320002
+     0.0000000     0.3139210     0.9494490    40.4481010
+     0.0000000     0.0000000     0.0000000     1.0000000
+
+[END]
