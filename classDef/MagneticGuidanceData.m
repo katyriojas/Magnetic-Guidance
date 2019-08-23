@@ -37,7 +37,8 @@ classdef MagneticGuidanceData
         force_i_end
     end
     properties (Dependent, SetAccess = private)
-        time_insertion  % [ns] Nx1, times corresponding to each force measurement during insertion
+        time_insertion_unix  % [ns->UNIX time] Nx1, times corresponding to each force measurement during insertion
+        time_insertion  % [s] Nx1, times corresponding to each force measurement during insertion
         force_insertion % [mN] Nx3, force measurements taken during insertion
         Fmag % [mN] Nx1, ||force_insertion||
         Fx   % [mN] Nx1, force_insertion(:,1)
@@ -49,10 +50,21 @@ classdef MagneticGuidanceData
         Fy_smooth
         Fz_smooth
         force_i_insertion % indices of force measurements taken during insertion
+        torque_insertion % [mN] Nx3, torque measurements taken during insertion
+        Tmag % [mN] Nx1, ||torque_insertion||
+        Tx   % [mN] Nx1, torque_insertion(:,1)
+        Ty   % [mN] Nx1, torque_insertion(:,2)
+        Tz   % [mN] Nx1, torque_insertion(:,3)
+        torque_insertion_smooth
+        Tmag_smooth
+        Tx_smooth
+        Ty_smooth
+        Tz_smooth
     end
     properties (Access = private)
         smooth_span; % proportion of points to use for smoothing (default = 0.06)
-        force_insertion_smooth_ % only recomputed if smooth_span has changed
+        force_insertion_smooth_  % only recomputed if smooth_span has changed        
+        torque_insertion_smooth_ % only recomputed if smooth_span has changed
     end
 
     methods
@@ -79,14 +91,14 @@ classdef MagneticGuidanceData
 %             end    
 
             % force indices corresponding to smaract start/stop (i.e. during insertion)
-            obj.force_i_start = find(obj.nano.time >= obj.smaract.time_start, 1);
-            obj.force_i_end   = find(obj.nano.time >= obj.smaract.time_end,   1);
+            obj.force_i_start = find(obj.nano.time >= obj.smaract.time_start_unix, 1);
+            obj.force_i_end   = find(obj.nano.time >= obj.smaract.time_end_unix,   1);
             
             % interpolate to find ch0 position at each force measurement during insertion
-            obj.depth_insertion = interp1(obj.smaract.time, obj.smaract.ch0, obj.time_insertion);
+            obj.depth_insertion = interp1(obj.smaract.time_unix, obj.smaract.ch0, obj.time_insertion_unix);
             
             % initialize default smoothing
-            obj = obj.setSmoothSpan(0.06);
+            obj = obj.setSmoothSpan(0.02); % .06
         end
         
         function obj = setSmoothSpan(obj, smooth_span)
@@ -98,12 +110,21 @@ classdef MagneticGuidanceData
                     [ smooth(obj.depth_insertion, obj.Fx, smooth_span, 'loess'), ...
                       smooth(obj.depth_insertion, obj.Fy, smooth_span, 'loess'), ...
                       smooth(obj.depth_insertion, obj.Fz, smooth_span, 'loess')];
+                  
+                obj.torque_insertion_smooth_ = ...
+                    [ smooth(obj.depth_insertion, obj.Tx, smooth_span, 'loess'), ...
+                      smooth(obj.depth_insertion, obj.Ty, smooth_span, 'loess'), ...
+                      smooth(obj.depth_insertion, obj.Tz, smooth_span, 'loess')];
             end
         end
                
-        function time_insertion = get.time_insertion(obj)
-            time_insertion = obj.nano.time(obj.force_i_insertion);
+        function time_insertion_unix = get.time_insertion_unix(obj)
+            time_insertion_unix = obj.nano.time(obj.force_i_insertion);
         end
+        
+        function time_insertion = get.time_insertion(obj)
+            time_insertion = (obj.time_insertion_unix - obj.time_insertion_unix(1))/1e9;
+        end    
         
         function force_insertion = get.force_insertion(obj)
             force_insertion = obj.nano.force(obj.force_i_insertion);
@@ -147,6 +168,46 @@ classdef MagneticGuidanceData
         
         function force_i_insertion = get.force_i_insertion(obj)
             force_i_insertion = [obj.force_i_start:obj.force_i_end]';
+        end
+        
+        function torque_insertion = get.torque_insertion(obj)
+            torque_insertion = obj.nano.torque(obj.force_i_insertion);
+        end
+        
+        function Tx = get.Tx(obj)
+            Tx = obj.nano.Tx(obj.force_i_insertion);
+        end
+       
+        function Ty = get.Ty(obj)
+            Ty = obj.nano.Ty(obj.force_i_insertion); 
+        end
+       
+        function Tz = get.Tz(obj)
+            Tz = obj.nano.Tz(obj.force_i_insertion); 
+        end
+       
+        function Tmag = get.Tmag(obj)
+            Tmag = obj.nano.Tmag(obj.force_i_insertion);
+        end
+        
+        function torque_insertion_smooth = get.torque_insertion_smooth(obj)
+            torque_insertion_smooth = obj.torque_insertion_smooth_;
+        end
+        
+        function Tx_smooth = get.Tx_smooth(obj)
+            Tx_smooth = obj.torque_insertion_smooth(:,1);
+        end
+       
+        function Ty_smooth = get.Ty_smooth(obj)
+            Ty_smooth = obj.torque_insertion_smooth(:,2); 
+        end
+       
+        function Tz_smooth = get.Tz_smooth(obj)
+            Tz_smooth = obj.torque_insertion_smooth(:,3); 
+        end
+       
+        function Tmag_smooth = get.Tmag_smooth(obj)
+            Tmag_smooth = sqrt(sum(obj.torque_insertion_smooth.^2, 2));
         end
     end 
 end

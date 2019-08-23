@@ -4,7 +4,7 @@ clear all; close all; clc;
 addpath('classDef','functions','data');
 
 % filepaths to CSVs exported from ROS bags
-base_path = 'C:\Users\riojaske\Documents\magsteer\PreopPlanning\data\phantom\';
+base_path = 'data\phantom\';
 
 filepaths_nomag1.smaract = fullfile(base_path, 'UG-MEA\phantom_ug_mea1_trial1_smaract.csv');
 filepaths_nomag1.force   = fullfile(base_path, 'UG-MEA\phantom_ug_mea1_trial1_force.csv');

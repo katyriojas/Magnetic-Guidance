@@ -5,13 +5,14 @@ classdef Nano17Data
    end
    properties (Dependent, SetAccess = private)
        time   % [ns] Nx1
-       force % [mN] Nx3
+       force  % [mN] Nx3
        Fmag   % [mN] Nx1
        Fx     % [mN] Nx1
        Fy
        Fz
        torque % [Nmm] Nx3
-       Tx      % [Nmm] Nx1
+       Tmag   % [Nmm] Nx1
+       Tx     % [Nmm] Nx1
        Ty
        Tz
    end
@@ -62,6 +63,10 @@ classdef Nano17Data
        
        function Fmag = get.Fmag(obj)
           Fmag = sqrt(sum(obj.force.^2, 2));
+       end
+       
+      function Tmag = get.Tmag(obj)
+          Tmag = sqrt(sum(obj.torque.^2, 2));
        end
    end
     
