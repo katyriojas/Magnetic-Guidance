@@ -1,0 +1,114 @@
+VUMIPLAB
+CIP 5.5.4
+PREDICTION FILE
+0100
+
+[COMMENTS]
+Exported on: Fri Aug 23 15:11:16 2019
+Version: 3.6.3
+
+[IDENTIFICATION]
+// DICOM tag of Patient ID: 0010-0020, Study UID(optional): 0020-000D, Series UID: 0020-000E
+// Image Info: DimX DimY DimZ VszX VszY VszZ OriX OriY OriZ DataType(optional) BytOrder(opt) HdrSize(opt) Modality(opt) Min(opt) Max(opt)
+
+Plan       UID:  4240957214001
+
+I1   Patient ID:  20190716a
+I1   Study  UID:  1.2.826.0.1.3680043.2.594.2110689004.619883515.2.385185
+I1   Series UID:  1.2.826.0.1.3680043.2.594.2110689004.619883515.3.477361.1
+I1   IMAGE INFO:  900 900 624 0.200000 0.200000 0.200000 1 2 -3 2 1 0 CT -1000.000000 7190.000000
+I1        ALIAS:  Preop CT
+
+I2   Patient ID:  08/23/2019
+I2   Study  UID:  1.2.826.0.1.3680043.2.594.2110689004.619883762.1878.109828
+I2   Series UID:  1.2.826.0.1.3680043.2.594.2110689004.619883762.1879.279262.1
+I2   IMAGE INFO:  732 732 416 0.300000 0.300000 0.300000 1 2 -3 2 1 0 CT -1000.000000 7190.000000
+I2        ALIAS:  Intraop CT
+
+REF IMAGE INFO:  I1
+
+[TRANSFORMATION REF]  // 4x4 world matrix mapping points from world to REF
+     1.0000000     0.0000000     0.0000000     0.0000000
+     0.0000000     1.0000000     0.0000000     0.0000000
+     0.0000000     0.0000000     1.0000000     0.0000000
+     0.0000000     0.0000000     0.0000000     1.0000000
+
+[TRANSFORMATION I1->REF]  // 4x4 world matrix mapping points from REF to I1
+     1.0000000     0.0000000     0.0000000     0.0000000
+     0.0000000     1.0000000     0.0000000     0.0000000
+     0.0000000     0.0000000     1.0000000     0.0000000
+     0.0000000     0.0000000     0.0000000     1.0000000
+
+//     1.0000000     0.0000000     0.0000000     0.0000000
+//     0.0000000     1.0000000     0.0000000     0.0000000
+//     0.0000000     0.0000000     1.0000000     0.0000000
+//     0.0000000     0.0000000     0.0000000     1.0000000
+
+[TRANSFORMATION I2->REF]  // 4x4 world matrix mapping points from REF to I2
+     0.7604142     0.1876792    -0.6217251   -29.7556551
+    -0.3041097    -0.7429602    -0.5962489    19.9587725
+    -0.5738349     0.6424691    -0.5078831   -92.1552860
+    -0.0000000     0.0000000    -0.0000000     0.9999996
+
+//     0.5069427     0.1251197     0.4144838  -146.9094247
+//    -0.2027398    -0.4953065     0.3974996   621.9797962
+//     0.3825566    -0.4283126    -0.3385885   640.7218339
+//    -0.0000000     0.0000000     0.0000000     0.9999990
+
+[ANATOMICAL POINT I1]
+// One anatomical point per line with parameters defined as
+// [id name x y z r g b]
+// id:                uniq id
+// name:              name
+// x y z:             image coordinates in pixel
+// r g b:             optional color
+1  "cochlea"    468.9000    747.3800    449.1080  255  0  0
+2  "SSC"    458.2760    767.3000    389.2370  255  0  0
+3  "utricle"    452.4400    773.5280    426.9500  255  0  0
+
+[ANATOMICAL POINT I2]
+// One anatomical point per line with parameters defined as
+// [id name x y z r g b]
+// id:                uniq id
+// name:              name
+// x y z:             image coordinates in pixel
+// r g b:             optional color
+1  "SSC"    339.1310    306.1090    353.0660  0  255  0
+2  "cochlea"    369.9890    335.4880    348.4220  0  255  0
+3  "utricle"    358.7050    314.3180    344.9390  0  255  0
+
+[ANATOMY]                 // AC, PC, Mid-plane point in patient coordinates
+    89.90000     74.90000     62.30000 
+    89.90000    104.90000     62.30000 
+    89.90000     89.90000      2.30000 
+
+[MARKER]                // one marker set per line, base (anchor) followed by optional tip (marker) in patient coordinates
+   188.60519    153.35338    104.08606    194.83826    158.70062    109.79193 
+   139.77940    181.26697    160.85175    146.01241    186.61423    166.55757 
+    89.68710    180.57339    184.25415     95.92014    185.92059    189.95996 
+    50.90695    138.25623    150.40121     57.13999    143.60347    156.10701 
+
+[TRAJECTORY]              // one trajectory per line, target point followed by optional entry point in patient coordinates, with id, diameter, color, type, and lead model
+    88.89548    153.81461     90.15723     86.58596    161.72055     89.05614  "Left"  1.59 " 248 248  64" "" "" // 7.80 64.40 4.40
+//      0.43035     -0.85881      0.27793      1.00452 
+//      0.00000      0.30790      0.95142     63.91460 
+//     -0.90266     -0.40945      0.13251    -27.85723 
+//      0.00000      0.00000      0.00000      1.00000 
+//      0.43035      0.00000     -0.90266    -25.57791 
+//     -0.85881      0.30790     -0.40945    -30.22286 
+//      0.27793      0.95142      0.13251    -57.39738 
+//     -0.00000     -0.00000     -0.00000      1.00000 
+
+[CIP TRANSFORMATIONS]
+Atlas to Preop Transformation (Left) =
+     0.4501880     0.8929340     0.0000000   -20.6518002
+    -0.8694270     0.4383360     0.2279420   -27.4179001
+     0.2035370    -0.1026170     0.9736740    35.1158981
+     0.0000000     0.0000000     0.0000000     1.0000000
+Atlas to Preop Transformation (Right) =
+    -1.0000000    -0.0000000    -0.0000000    -1.5966700
+     0.0000000     1.0000000     0.0000000     0.0000000
+     0.0000000     0.0000000     1.0000000    21.9986000
+     0.0000000     0.0000000     0.0000000     1.0000000
+
+[END]

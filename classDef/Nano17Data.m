@@ -63,6 +63,7 @@ classdef Nano17Data
        function Fmag = get.Fmag(obj)
           Fmag = sqrt(sum(obj.force.^2, 2));
        end
+      
    end
     
 end
