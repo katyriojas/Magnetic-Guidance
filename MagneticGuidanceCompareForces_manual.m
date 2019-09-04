@@ -1,11 +1,10 @@
 %% Import Force and Smaract data
 clear all; close all; clc;
 
-addpath('C:\Users\riojaske\Documents\magsteer\Magnetic-Guidance\functions');
-addpath('C:\Users\riojaske\Documents\magsteer\Magnetic-Guidance\classDef');
+addpath('functions','classDef','data');
 
 % Filepaths to CSVs that were exported from ROS bags
-base_path = 'C:\Users\riojaske\Documents\magsteer\Magnetic-Guidance\data';
+base_path = 'data';
 
 filepaths_p_manual.force = fullfile(base_path, 'phantom\manual\phantom_manual_ea_trial1_force.csv');
 filepaths_p_manual.force2 = fullfile(base_path, 'phantom\manual\phantom_manual_ea_trial2_force.csv');
@@ -39,50 +38,64 @@ cman3_Fmag_smooth = smoothForces(data_cman3,smooth_span);
 
 %% Plot the manual data
 alpha = 1; % reduce transparency of unguided plot lines
+xyzColor = distinguishable_colors(3);
 cMat = distinguishable_colors(7);
 
 figure(1); 
-subplot(1,2,1); grid on; hold on;
+subplot(1,4,1); grid on; hold on;
 xlabel('Time (s)'); ylabel('Force [mN]');
-title('Manual Insertions in Phantoms');
+sgtitle('Manual Insertions in Phantoms');
 
 % manual, no smoothing
-plot(data_pman1.time-data_pman1.time(1),data_pman1.Fx, 'Color', [cMat(1,:), 0.3*alpha]);
-plot(data_pman1.time-data_pman1.time(1),data_pman1.Fy, 'Color', [cMat(1,:), 0.3*alpha]);
-plot(data_pman1.time-data_pman1.time(1),data_pman1.Fz, 'Color', [cMat(1,:), 0.3*alpha]);
+plot(data_pman1.time-data_pman1.time(1),data_pman1.Fx, 'Color', [xyzColor(1,:), 0.3*alpha]);
+plot(data_pman1.time-data_pman1.time(1),data_pman1.Fy, 'Color', [xyzColor(2,:), 0.3*alpha]);
+plot(data_pman1.time-data_pman1.time(1),data_pman1.Fz, 'Color', [xyzColor(3,:), 0.3*alpha]);
 
-plot(data_pman2.time-data_pman2.time(1),data_pman2.Fx, 'Color', [cMat(2,:), 0.3*alpha]);
-plot(data_pman2.time-data_pman2.time(1),data_pman2.Fy, 'Color', [cMat(2,:), 0.3*alpha]);
-plot(data_pman2.time-data_pman2.time(1),data_pman2.Fz, 'Color', [cMat(2,:), 0.3*alpha]);
+subplot(1,4,2); grid on; hold on;
+xlabel('Time (s)'); 
+plot(data_pman2.time-data_pman2.time(1),data_pman2.Fx, 'Color', [xyzColor(1,:), 0.3*alpha]);
+plot(data_pman2.time-data_pman2.time(1),data_pman2.Fy, 'Color', [xyzColor(2,:), 0.3*alpha]);
+plot(data_pman2.time-data_pman2.time(1),data_pman2.Fz, 'Color', [xyzColor(3,:), 0.3*alpha]);
 
-plot(data_pman3.time-data_pman3.time(1),data_pman3.Fx, 'Color', [cMat(3,:), 0.3*alpha]);
-plot(data_pman3.time-data_pman3.time(1),data_pman3.Fy, 'Color', [cMat(3,:), 0.3*alpha]);
-plot(data_pman3.time-data_pman3.time(1),data_pman3.Fz, 'Color', [cMat(3,:), 0.3*alpha]);
+subplot(1,4,3); grid on; hold on;
+xlabel('Time (s)'); 
+plot(data_pman3.time-data_pman3.time(1),data_pman3.Fx, 'Color', [xyzColor(1,:), 0.3*alpha]);
+plot(data_pman3.time-data_pman3.time(1),data_pman3.Fy, 'Color', [xyzColor(2,:), 0.3*alpha]);
+plot(data_pman3.time-data_pman3.time(1),data_pman3.Fz, 'Color', [xyzColor(3,:), 0.3*alpha]);
 
-plot(data_pman4.time-data_pman4.time(1),data_pman4.Fx, 'Color', [cMat(4,:), 0.3*alpha]);
-plot(data_pman4.time-data_pman4.time(1),data_pman4.Fy, 'Color', [cMat(4,:), 0.3*alpha]);
-plot(data_pman4.time-data_pman4.time(1),data_pman4.Fz, 'Color', [cMat(4,:), 0.3*alpha]);
+subplot(1,4,4); grid on; hold on;
+xlabel('Time (s)'); 
+plot(data_pman4.time-data_pman4.time(1),data_pman4.Fx, 'Color', [xyzColor(1,:), 0.3*alpha]);
+plot(data_pman4.time-data_pman4.time(1),data_pman4.Fy, 'Color', [xyzColor(2,:), 0.3*alpha]);
+plot(data_pman4.time-data_pman4.time(1),data_pman4.Fz, 'Color', [xyzColor(3,:), 0.3*alpha]);
+legend('Fx','Fy','Fz');
 
-subplot(1,2,2); grid on; hold on;
+figure(2);
+subplot(1,3,1); grid on; hold on;
 xlabel('Time (s)'); ylabel('Force [mN]');
-title('Manual Insertions in a Cadaver');
+sgtitle('Manual Insertions in a Cadaver');
 
-plot(data_cman1.time-data_cman1.time(1),data_cman1.Fx, 'Color', [cMat(5,:), 0.3*alpha]);
-plot(data_cman1.time-data_cman1.time(1),data_cman1.Fy, 'Color', [cMat(5,:), 0.3*alpha]);
-plot(data_cman1.time-data_cman1.time(1),data_cman1.Fz, 'Color', [cMat(5,:), 0.3*alpha]);
+plot(data_cman1.time-data_cman1.time(1),data_cman1.Fx, 'Color', [xyzColor(1,:), 0.3*alpha]);
+plot(data_cman1.time-data_cman1.time(1),data_cman1.Fy, 'Color', [xyzColor(2,:), 0.3*alpha]);
+plot(data_cman1.time-data_cman1.time(1),data_cman1.Fz, 'Color', [xyzColor(3,:), 0.3*alpha]);
 
-plot(data_cman2.time-data_cman2.time(1),data_cman2.Fx, 'Color', [cMat(6,:), 0.3*alpha]);
-plot(data_cman2.time-data_cman2.time(1),data_cman2.Fy, 'Color', [cMat(6,:), 0.3*alpha]);
-plot(data_cman2.time-data_cman2.time(1),data_cman2.Fz, 'Color', [cMat(6,:), 0.3*alpha]);
+subplot(1,3,2); grid on; hold on;
+plot(data_cman2.time-data_cman2.time(1),data_cman2.Fx, 'Color', [xyzColor(1,:), 0.3*alpha]);
+plot(data_cman2.time-data_cman2.time(1),data_cman2.Fy, 'Color', [xyzColor(2,:), 0.3*alpha]);
+plot(data_cman2.time-data_cman2.time(1),data_cman2.Fz, 'Color', [xyzColor(3,:), 0.3*alpha]);
 
-plot(data_cman3.time-data_cman3.time(1),data_cman3.Fx, 'Color', [cMat(7,:), 0.3*alpha]);
-plot(data_cman3.time-data_cman3.time(1),data_cman3.Fy, 'Color', [cMat(7,:), 0.3*alpha]);
-plot(data_cman3.time-data_cman3.time(1),data_cman3.Fz, 'Color', [cMat(7,:), 0.3*alpha]);
+subplot(1,3,3); grid on; hold on;
+plot(data_cman3.time-data_cman3.time(1),data_cman3.Fx, 'Color', [xyzColor(1,:), 0.3*alpha]);
+plot(data_cman3.time-data_cman3.time(1),data_cman3.Fy, 'Color', [xyzColor(2,:), 0.3*alpha]);
+plot(data_cman3.time-data_cman3.time(1),data_cman3.Fz, 'Color', [xyzColor(3,:), 0.3*alpha]);
 
-figure(2); 
+legend('Fx','Fy','Fz');
+
+figure(3); 
 subplot(1,2,1); grid on; hold on;
 xlabel('Time (s)'); ylabel('Force [mN]');
 title('Magnitude of Manual Insertions in Phantoms');
+
 % plot(10^-9*(data_pman1.time-data_pman1.time(1)), data_pman1.Fmag, 'Color', [cMat(1,:),  0.3*alpha], 'LineWidth',0.1);
 h1 = plot(10^-9*(data_pman1.time-data_pman1.time(1)), pman1_Fmag_smooth, 'Color', [cMat(1,:),  alpha], 'LineWidth',1);
 
@@ -100,6 +113,7 @@ legend([h1,h2,h3,h4],{'Trial 1','Trial 2','Trial 3','Trial 4'});
 subplot(1,2,2); grid on; hold on;
 xlabel('Time (s)'); ylabel('Force [mN]');
 title('Magnitude of Manual Insertions in Cadavers');
+
 % plot(10^-9*(data_cman1.time-data_cman1.time(1)), data_cman1.Fmag, 'Color', [cMat(5,:),  0.3*alpha], 'LineWidth',0.1);
 h5 = plot(10^-9*(data_cman1.time-data_cman1.time(1)), cman1_Fmag_smooth, 'Color', [cMat(5,:),  0.3*alpha], 'LineWidth',1);
 
@@ -111,18 +125,18 @@ h7= plot(10^-9*(data_cman3.time-data_cman3.time(1)), cman3_Fmag_smooth, 'Color',
 
 legend([h5,h6,h7],{'Trial 1','Trial 2','Trial 3'});
 
-xvec = linspace(0,100,1000);
-
-Fmag_smooth_c = [interp1(10^-9*(data_cman1.time-data_cman1.time(1)),cman1_Fmag_smooth,xvec);...
-                 interp1(10^-9*(data_cman2.time-data_cman2.time(1)),cman2_Fmag_smooth,xvec);...
-                 interp1(10^-9*(data_cman3.time-data_cman3.time(1)),cman3_Fmag_smooth,xvec)];
-
-Favg_manual_c = nanmean(Fmag_smooth_c,1);
-std_manual_c = nanstd(Fmag_smooth_c);
-
-figure(4); 
-grid on; hold on; xlabel('Time (s)'); ylabel('Force (mN)');
-title('Average Insertion Force in Cadaver vs. Time');
-plot(xvec,Favg_manual_c,'Color',cMat(1,:));
-fill([xvec fliplr(xvec)],[Favg_manual_c + std_manual_c, fliplr(Favg_manual_c-std_manual_c)],...
-    'b','FaceAlpha',0.2,'LineStyle','none');
+% xvec = linspace(0,100,1000);
+% 
+% Fmag_smooth_c = [interp1(10^-9*(data_cman1.time-data_cman1.time(1)),cman1_Fmag_smooth,xvec);...
+%                  interp1(10^-9*(data_cman2.time-data_cman2.time(1)),cman2_Fmag_smooth,xvec);...
+%                  interp1(10^-9*(data_cman3.time-data_cman3.time(1)),cman3_Fmag_smooth,xvec)];
+% 
+% Favg_manual_c = nanmean(Fmag_smooth_c,1);
+% std_manual_c = nanstd(Fmag_smooth_c);
+% 
+% figure(4); 
+% grid on; hold on; xlabel('Time (s)'); ylabel('Average ||Force||');
+% title('Average Insertion Force in Cadaver vs. Time');
+% plot(xvec,Favg_manual_c,'Color',cMat(1,:));
+% fill([xvec fliplr(xvec)],[Favg_manual_c + std_manual_c, fliplr(Favg_manual_c-std_manual_c)],...
+%     'b','FaceAlpha',0.2,'LineStyle','none');

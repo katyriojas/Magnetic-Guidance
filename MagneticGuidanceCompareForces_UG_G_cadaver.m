@@ -3,17 +3,15 @@ clear all; close all; clc;
 
 addpath('classDef','functions','data');
 
-% Pull in the 1.25mm/s guided mea2 data
-
-% Filepaths to CSVs exported from ROS bags
-base_path = 'C:\Users\riojaske\Documents\magsteer\Magnetic-Guidance\data\cadaver';
+% Specify filepaths for .csv files of data
+base_path = 'data\cadaver\';
 
 filepaths_nomag1_mea.smaract = fullfile(base_path, 'UG-MEA\cadaver_ug_mea2_trial1_smaract.csv');
 filepaths_nomag1_mea.force   = fullfile(base_path, 'UG-MEA\cadaver_ug_mea2_trial1_force.csv');
 
 filepaths_nomag2_mea.smaract = fullfile(base_path, 'UG-MEA\cadaver_ug_mea2_trial2_smaract.csv');
 filepaths_nomag2_mea.force   = fullfile(base_path, 'UG-MEA\cadaver_ug_mea2_trial2_force.csv');
-% 
+
 filepaths_nomag3_mea.smaract = fullfile(base_path, 'UG-MEA\cadaver_ug_mea2_trial3_smaract.csv');
 filepaths_nomag3_mea.force   = fullfile(base_path, 'UG-MEA\cadaver_ug_mea2_trial3_force.csv');
 
@@ -35,7 +33,7 @@ data_mag1 = MagneticGuidanceData(filepaths_mag1);
 data_mag2 = MagneticGuidanceData(filepaths_mag2);
 data_mag3 = MagneticGuidanceData(filepaths_mag3);
 
-% set smoothing span (proportion of data points)
+% Set smoothing span (proportion of data points)
 beta = 0.01;
 
 data_nomag1_mea.setSmoothSpan(beta);
@@ -46,14 +44,11 @@ data_mag1.setSmoothSpan(beta);
 data_mag2.setSmoothSpan(beta);
 data_mag3.setSmoothSpan(beta);
 
-%% plot
-
-PlotColors; % load custom colors
+%% Plot
 alpha = 1; % reduce transparency of unguided plot lines
+colorsMat = distinguishable_colors(12); % pull in a set of distinguishable colors
 
-colorsMat = distinguishable_colors(12);
-
-% Figure: force magnitude
+% Create force magnitude figure
 figure(1); clf(1); hold on; grid on;
 
 plot(data_nomag1_mea.depth_insertion, data_nomag1_mea.Fmag, 'Color', [colorsMat(1,:),  0.3*alpha], 'LineWidth',1);
@@ -111,5 +106,5 @@ fill([xvec fliplr(xvec)],[Favg_mag + std_mag, fliplr(Favg_mag-std_mag)],...
 
 h4 = plot(xvec,-(Favg_nomag_mea-Favg_mag),'Color',colorsMat2(4,:),'LineWidth',4,'LineStyle',':');
 
-legend([h1,h2,h4],{'Favg_{nomag_{mea}} N=3','Favg_{mag} N=3','Favgdiff N=3'});
-xlabel('Insertion Depth [mm]'); ylabel('Force [mN]');
+legend([h1,h2,h4],{'No Magnetic Guidance N=3','Magnetic Guidance N=3','Average Difference N=3'});
+xlabel('Insertion Depth [mm]'); ylabel('Average ||Force||[mN]');

@@ -6,7 +6,7 @@ addpath('classDef','functions','data');
 % Pull in the 1.25mm/s guided mea2 data
 
 % Filepaths to CSVs exported from ROS bags
-base_path = 'C:\Users\riojaske\Documents\magsteer\Magnetic-Guidance\data\phantom\';
+base_path = 'data\phantom\';
 
 filepaths_nomag1_mea.smaract = fullfile(base_path, 'unguided_mea_saline_1.25\phantom_ug_mea1_trial1_1.25_smaract.csv');
 filepaths_nomag1_mea.force   = fullfile(base_path, 'unguided_mea_saline_1.25\phantom_ug_mea1_trial1_1.25_force.csv');
@@ -130,7 +130,9 @@ title('Guided vs Unguided Insertion')
 xlabel('Insertion Depth [mm]')
 ylabel('||Force|| [mN]')
 % legend([h1,h4],{'nomag1','mag1'});
-legend([h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12],{'nomag1-mea','nomag2-mea','nomag3-mea','nomag4-mea','mag1','mag2','mag3','mag4','nomag1-ea','nomag2-ea','nomag3-ea','nomag4-ea'});
+legend([h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12],{'nomag1-mea',...
+    'nomag2-mea','nomag3-mea','nomag4-mea','mag1','mag2','mag3','mag4',...
+    'nomag1-ea','nomag2-ea','nomag3-ea','nomag4-ea'});
 xlim([0,27]);
 % ylim([0,40]);
 
@@ -185,8 +187,8 @@ h4 = plot(xvec,-(Favg_nomag_mea-Favg_mag),'Color',colorsMat2(4,:),'LineWidth',4,
 % Plot differences
 % h5 = plot(xvec,(Favg_nomag_mea-Favg_nomag_ea),'Color',colorsMat2(5,:),'LineWidth',4,'LineStyle',':');
 % h6 = plot(xvec,-(Favg_nomag_ea-Favg_mag),'Color',colorsMat2(6,:),'LineWidth',4,'LineStyle',':');
-legend([h1,h2,h4],'Favg_{nomag_{mea}} N = 4','Favg_{mag} N = 4','Favg_{diff} N = 4');
+legend([h1,h2,h4],'No Magnetic Guidance N=4','Magnetic Guidance N=4','Average Difference N=4');
 % legend([h1,h2,h3,h4,h5,h6],{'Favg_{nomag_mea}','Favg_{mag}',...
 %     'Favg_{nomag_ea}','Favgdiff_{nomagMEA2mag}','Favgdiff_{nomagMEA2nomagEA}',...
 %     'Favgdiff_{nomagEA2mag}'});
-xlabel('Insertion Depth [mm]'); ylabel('Force [mN]');
+xlabel('Insertion Depth [mm]'); ylabel('Average ||Force|| [mN]');
