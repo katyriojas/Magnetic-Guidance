@@ -22,17 +22,17 @@ Ay = Fy'\weights';
 Az = Fz'\weights';
 
 % Mean slope
-avgSlope = mean([Ax,Ay,Az]);
+avg_cal_slope = mean([Ax,Ay,Az]);
 
 text(250,200,strcat('Slope Fx: ',' ',num2str(Ax)));
 text(250,150,strcat('Slope Fy: ',' ',num2str(Ay)));
 text(250,100,strcat('Slope Fz: ',' ',num2str(Az)));
-text(250,50,strcat('Avg Slope:',' ',num2str(avgSlope)));
+text(250,50,strcat('Avg Slope:',' ',num2str(avg_cal_slope)));
 
 % Now let's plot the scaled curves
-plot(Fx*avgSlope,weights,'m*--','LineWidth',0.1);
-plot(Fy*avgSlope,weights,'c*--','LineWidth',0.1);
-plot(Fz*avgSlope,weights,'Color',[0.7,0.75,0.71],'LineStyle','--','Marker','*','LineWidth',0.1);
+plot(Fx*avg_cal_slope,weights,'m*--','LineWidth',0.1);
+plot(Fy*avg_cal_slope,weights,'c*--','LineWidth',0.1);
+plot(Fz*avg_cal_slope,weights,'Color',[0.7,0.75,0.71],'LineStyle','--','Marker','*','LineWidth',0.1);
 
 legend('Fx measured','Fy measured','Fz measured', 'Fx cal', 'Fy cal','Fz cal');
-
+save('data\avg_cal_slope.mat','avg_cal_slope');
