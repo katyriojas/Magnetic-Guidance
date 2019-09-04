@@ -2,8 +2,7 @@
 clear all; close all; clc;
 
 addpath('classDef','functions','data');
-
-% Pull in the 1.25mm/s guided mea2 data
+load('avg_cal_slope.mat');
 
 % Filepaths to CSVs exported from ROS bags
 base_path = 'data\phantom\';
@@ -60,23 +59,38 @@ data_nomag2_ea = MagneticGuidanceData(filepaths_nomag2_ea);
 data_nomag3_ea = MagneticGuidanceData(filepaths_nomag3_ea);
 data_nomag4_ea = MagneticGuidanceData(filepaths_nomag4_ea);
 
+data_nomag1_mea = data_nomag1_mea.setCalSlope(avg_cal_slope);
+data_nomag2_mea = data_nomag2_mea.setCalSlope(avg_cal_slope);
+data_nomag3_mea = data_nomag3_mea.setCalSlope(avg_cal_slope);
+data_nomag4_mea = data_nomag4_mea.setCalSlope(avg_cal_slope);
+
+data_mag1 = data_mag1.setCalSlope(avg_cal_slope);
+data_mag2 = data_mag2.setCalSlope(avg_cal_slope);
+data_mag3 = data_mag3.setCalSlope(avg_cal_slope);
+data_mag4 = data_mag4.setCalSlope(avg_cal_slope);
+
+data_nomag1_ea = data_nomag1_ea.setCalSlope(avg_cal_slope);
+data_nomag2_ea = data_nomag2_ea.setCalSlope(avg_cal_slope);
+data_nomag3_ea = data_nomag3_ea.setCalSlope(avg_cal_slope);
+data_nomag4_ea = data_nomag4_ea.setCalSlope(avg_cal_slope);
+
 % set smoothing span (proportion of data points)
-beta = 0.01;
+smooth_span = 0.06;
 
-data_nomag1_mea.setSmoothSpan(beta);
-data_nomag2_mea.setSmoothSpan(beta);
-data_nomag3_mea.setSmoothSpan(beta);
-data_nomag4_mea.setSmoothSpan(beta);
+data_nomag1_mea = data_nomag1_mea.setSmoothSpan(smooth_span);
+data_nomag2_mea = data_nomag2_mea.setSmoothSpan(smooth_span);
+data_nomag3_mea = data_nomag3_mea.setSmoothSpan(smooth_span);
+data_nomag4_mea = data_nomag4_mea.setSmoothSpan(smooth_span);
 
-data_mag1.setSmoothSpan(beta);
-data_mag2.setSmoothSpan(beta);
-data_mag3.setSmoothSpan(beta);
-data_mag4.setSmoothSpan(beta);
+data_mag1 = data_mag1.setSmoothSpan(smooth_span);
+data_mag2 = data_mag2.setSmoothSpan(smooth_span);
+data_mag3 = data_mag3.setSmoothSpan(smooth_span);
+data_mag4 = data_mag4.setSmoothSpan(smooth_span);
 
-data_nomag1_ea.setSmoothSpan(beta);
-data_nomag2_ea.setSmoothSpan(beta);
-data_nomag3_ea.setSmoothSpan(beta);
-data_nomag4_ea.setSmoothSpan(beta);
+data_nomag1_ea = data_nomag1_ea.setSmoothSpan(smooth_span);
+data_nomag2_ea = data_nomag2_ea.setSmoothSpan(smooth_span);
+data_nomag3_ea = data_nomag3_ea.setSmoothSpan(smooth_span);
+data_nomag4_ea = data_nomag4_ea.setSmoothSpan(smooth_span);
 
 %% plot
 PlotColors; % load custom colors
@@ -85,91 +99,85 @@ alpha = 1; % reduce transparency of unguided plot lines
 colorsMat = distinguishable_colors(12);
 
 % Figure: force magnitude
-figure(1); clf(1); hold on; grid on;
-
-% plot(data_nomag1.depth_insertion, data_nomag1.Fmag, 'Color', [rand(1,3),  0.3*alpha], 'LineWidth',1);
-h1 = plot(data_nomag1_mea.depth_insertion, data_nomag1_mea.Fmag_smooth, 'Color', colorsMat(1,:), 'LineWidth',1,'LineStyle','--');
+figure(2); hold on; grid on;
+plot(data_nomag1_ea.depth_insertion, data_nomag1_ea.Fmag_cal, 'Color', [colorsMat(1,:),  0.3*alpha], 'LineWidth',1);
+h1 = plot(data_nomag1_ea.depth_insertion, data_nomag1_ea.Fmag_smooth_cal, 'Color', colorsMat(1,:), 'LineWidth',3,'LineStyle',':');
 % 
-% plot(data_nomag2.depth_insertion, data_nomag2.Fmag, 'Color', colors2(1,:), 'LineWidth',1);
-h2 = plot(data_nomag2_mea.depth_insertion, data_nomag2_mea.Fmag_smooth, 'Color', colorsMat(2,:), 'LineWidth',1,'LineStyle','--');
+plot(data_nomag2_ea.depth_insertion, data_nomag2_ea.Fmag_cal, 'Color', colorsMat(2,:), 'LineWidth',1);
+h2 = plot(data_nomag2_ea.depth_insertion, data_nomag2_ea.Fmag_smooth_cal, 'Color', colorsMat(2,:), 'LineWidth',3,'LineStyle',':');
 
-% plot(data_nomag3.depth_insertion, data_nomag3.Fmag, 'Color', [colors3(1,:),  0.3*alpha], 'LineWidth',1);
-h3 = plot(data_nomag3_mea.depth_insertion, data_nomag3_mea.Fmag_smooth, 'Color', colorsMat(3,:), 'LineWidth',1,'LineStyle','--');
+plot(data_nomag3_ea.depth_insertion, data_nomag3_ea.Fmag_cal, 'Color', [colorsMat(3,:),  0.3*alpha], 'LineWidth',1);
+h3 = plot(data_nomag3_ea.depth_insertion, data_nomag3_ea.Fmag_smooth_cal, 'Color', colorsMat(3,:), 'LineWidth',3,'LineStyle',':');
 
-% plot(data_nomag4.depth_insertion, data_nomag4.Fmag, 'Color', [colors4(1,:),  0.3*alpha], 'LineWidth',1);
-h4 = plot(data_nomag4_mea.depth_insertion, data_nomag4_mea.Fmag_smooth, 'Color', colorsMat(4,:), 'LineWidth',1,'LineStyle','--');
+plot(data_nomag4_ea.depth_insertion, data_nomag4_ea.Fmag_cal, 'Color', [colorsMat(4,:),  0.3*alpha], 'LineWidth',1);
+h4 = plot(data_nomag4_ea.depth_insertion, data_nomag4_ea.Fmag_smooth_cal, 'Color', colorsMat(4,:), 'LineWidth',3,'LineStyle',':');
 
-% plot(data_mag1.depth_insertion, data_mag1.Fmag, 'Color', [colors5(1,:), 0.3*alpha], 'LineWidth', 1);
-h5 = plot(data_mag1.depth_insertion, data_mag1.Fmag_smooth, 'Color',colorsMat(5,:), 'LineWidth', 2);
-
-% plot(data_mag2.depth_insertion, data_mag2.Fmag, 'Color', [colors6(1,:), 0.3*alpha], 'LineWidth', 1);
-h6 = plot(data_mag2.depth_insertion, data_mag2.Fmag_smooth, 'Color', colorsMat(6,:), 'LineWidth', 2);
-
-% plot(data_mag3.depth_insertion, data_mag3.Fmag, 'Color', [colors7(1,:), 0.3*alpha], 'LineWidth', 1);
-h7 = plot(data_mag3.depth_insertion, data_mag3.Fmag_smooth, 'Color', colorsMat(7,:), 'LineWidth', 2);
-
-% plot(data_mag4.depth_insertion, data_mag4.Fmag, 'Color', [colors8(1,:), 0.3*alpha], 'LineWidth', 1);
-h8 = plot(data_mag4.depth_insertion, data_mag4.Fmag_smooth, 'Color', colorsMat(8,:), 'LineWidth', 2);
-
-% plot(data_nomag1.depth_insertion, data_nomag1.Fmag, 'Color', [rand(1,3),  0.3*alpha], 'LineWidth',1);
-h9 = plot(data_nomag1_ea.depth_insertion, data_nomag1_ea.Fmag_smooth, 'Color', colorsMat(9,:), 'LineWidth',3,'LineStyle',':');
+plot(data_nomag1_mea.depth_insertion, data_nomag1_mea.Fmag_cal, 'Color', [colorsMat(5,:),  0.3*alpha], 'LineWidth',1);
+h5 = plot(data_nomag1_mea.depth_insertion, data_nomag1_mea.Fmag_smooth_cal, 'Color', colorsMat(5,:), 'LineWidth',1,'LineStyle','--');
 % 
-% plot(data_nomag2.depth_insertion, data_nomag2.Fmag, 'Color', colors2(1,:), 'LineWidth',1);
-h10 = plot(data_nomag2_ea.depth_insertion, data_nomag2_ea.Fmag_smooth, 'Color', colorsMat(10,:), 'LineWidth',3,'LineStyle',':');
+plot(data_nomag2_mea.depth_insertion, data_nomag2_mea.Fmag_cal, 'Color', colorsMat(6,:), 'LineWidth',1);
+h6 = plot(data_nomag2_mea.depth_insertion, data_nomag2_mea.Fmag_smooth_cal, 'Color', colorsMat(6,:), 'LineWidth',1,'LineStyle','--');
 
-% plot(data_nomag3.depth_insertion, data_nomag3.Fmag, 'Color', [colors3(1,:),  0.3*alpha], 'LineWidth',1);
-h11 = plot(data_nomag3_ea.depth_insertion, data_nomag3_ea.Fmag_smooth, 'Color', colorsMat(11,:), 'LineWidth',3,'LineStyle',':');
+plot(data_nomag3_mea.depth_insertion, data_nomag3_mea.Fmag_cal, 'Color', [colorsMat(7,:),  0.3*alpha], 'LineWidth',1);
+h7 = plot(data_nomag3_mea.depth_insertion, data_nomag3_mea.Fmag_smooth_cal, 'Color', colorsMat(7,:), 'LineWidth',1,'LineStyle','--');
 
-% plot(data_nomag4.depth_insertion, data_nomag4.Fmag, 'Color', [colors4(1,:),  0.3*alpha], 'LineWidth',1);
-h12 = plot(data_nomag4_ea.depth_insertion, data_nomag4_ea.Fmag_smooth, 'Color', colorsMat(12,:), 'LineWidth',3,'LineStyle',':');
+plot(data_nomag4_mea.depth_insertion, data_nomag4_mea.Fmag_cal, 'Color', [colorsMat(8,:),  0.3*alpha], 'LineWidth',1);
+h8 = plot(data_nomag4_mea.depth_insertion, data_nomag4_mea.Fmag_smooth_cal, 'Color', colorsMat(8,:), 'LineWidth',1,'LineStyle','--');
 
-% nomag_Fmag_interp = interp1(data_nomag1.depth_insertion, data_nomag1.Fmag_smooth, data_mag1.depth_insertion);
-% plot(data_mag1.depth_insertion, (data_mag1.Fmag_smooth - nomag_Fmag_interp), 'Color', colors.blue, 'LineWidth', 2);
+plot(data_mag1.depth_insertion, data_mag1.Fmag_cal, 'Color', [colorsMat(9,:), 0.3*alpha], 'LineWidth', 1);
+h9 = plot(data_mag1.depth_insertion, data_mag1.Fmag_smooth_cal, 'Color',colorsMat(9,:), 'LineWidth', 2);
+
+plot(data_mag2.depth_insertion, data_mag2.Fmag_cal, 'Color', [colorsMat(10,:), 0.3*alpha], 'LineWidth', 1);
+h10 = plot(data_mag2.depth_insertion, data_mag2.Fmag_smooth_cal, 'Color', colorsMat(10,:), 'LineWidth', 2);
+
+plot(data_mag3.depth_insertion, data_mag3.Fmag_cal, 'Color', [colorsMat(11,:), 0.3*alpha], 'LineWidth', 1);
+h11 = plot(data_mag3.depth_insertion, data_mag3.Fmag_smooth_cal, 'Color', colorsMat(11,:), 'LineWidth', 2);
+
+plot(data_mag4.depth_insertion, data_mag4.Fmag_cal, 'Color', [colorsMat(12,:), 0.3*alpha], 'LineWidth', 1);
+h12 = plot(data_mag4.depth_insertion, data_mag4.Fmag_smooth_cal, 'Color', colorsMat(12,:), 'LineWidth', 2);
 
 title('Guided vs Unguided Insertion')
 xlabel('Insertion Depth [mm]')
 ylabel('||Force|| [mN]')
 % legend([h1,h4],{'nomag1','mag1'});
-legend([h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12],{'nomag1-mea',...
-    'nomag2-mea','nomag3-mea','nomag4-mea','mag1','mag2','mag3','mag4',...
-    'nomag1-ea','nomag2-ea','nomag3-ea','nomag4-ea'});
-xlim([0,27]);
-% ylim([0,40]);
+legend([h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12],{'nomag1-ea',...
+    'nomag2-ea','nomag3-ea','nomag4-ea','nomag1-mea',...
+    'nomag2-mea','nomag3-mea','nomag4-mea','mag1','mag2','mag3','mag4'});
+
 
 xvec = linspace(0.25,23.7,1000);
 % xvec = linspace(0.25,26.4,1000);
 
-Fnomag_mea = [interp1(data_nomag1_mea.depth_insertion(2:end-1),data_nomag1_mea.Fmag_smooth(2:end-1),xvec);...
-              interp1(data_nomag2_mea.depth_insertion(2:end-1),data_nomag2_mea.Fmag_smooth(2:end-1),xvec);...
-              interp1(data_nomag3_mea.depth_insertion(2:end-1),data_nomag3_mea.Fmag_smooth(2:end-1),xvec);...
-              interp1(data_nomag4_mea.depth_insertion(2:end-1),data_nomag4_mea.Fmag_smooth(2:end-1),xvec)];
+Fnomag_mea = [interp1(data_nomag1_mea.depth_insertion(2:end-1),data_nomag1_mea.Fmag_smooth_cal(2:end-1),xvec);...
+              interp1(data_nomag2_mea.depth_insertion(2:end-1),data_nomag2_mea.Fmag_smooth_cal(2:end-1),xvec);...
+              interp1(data_nomag3_mea.depth_insertion(2:end-1),data_nomag3_mea.Fmag_smooth_cal(2:end-1),xvec);...
+              interp1(data_nomag4_mea.depth_insertion(2:end-1),data_nomag4_mea.Fmag_smooth_cal(2:end-1),xvec)];
 % 
-Fmag = [interp1(data_mag1.depth_insertion(2:end-1),data_mag1.Fmag_smooth(2:end-1),xvec);...
-        interp1(data_mag2.depth_insertion(2:end-1),data_mag2.Fmag_smooth(2:end-1),xvec);...
-        interp1(data_mag3.depth_insertion(2:end-1),data_mag3.Fmag_smooth(2:end-1),xvec);...
-        interp1(data_mag4.depth_insertion(2:end-1),data_mag4.Fmag_smooth(2:end-1),xvec)];
+Fmag = [interp1(data_mag1.depth_insertion(2:end-1),data_mag1.Fmag_smooth_cal(2:end-1),xvec);...
+        interp1(data_mag2.depth_insertion(2:end-1),data_mag2.Fmag_smooth_cal(2:end-1),xvec);...
+        interp1(data_mag3.depth_insertion(2:end-1),data_mag3.Fmag_smooth_cal(2:end-1),xvec);...
+        interp1(data_mag4.depth_insertion(2:end-1),data_mag4.Fmag_smooth_cal(2:end-1),xvec)];
     
-Fnomag_ea = [interp1(data_nomag1_ea.depth_insertion(2:end-1),data_nomag1_ea.Fmag_smooth(2:end-1),xvec);...
-             interp1(data_nomag2_ea.depth_insertion(2:end-1),data_nomag2_ea.Fmag_smooth(2:end-1),xvec);...
-             interp1(data_nomag3_ea.depth_insertion(2:end-1),data_nomag3_ea.Fmag_smooth(2:end-1),xvec);...
-             interp1(data_nomag4_ea.depth_insertion(2:end-1),data_nomag4_ea.Fmag_smooth(2:end-1),xvec)];
+Fnomag_ea = [interp1(data_nomag1_ea.depth_insertion(2:end-1),data_nomag1_ea.Fmag_smooth_cal(2:end-1),xvec);...
+             interp1(data_nomag2_ea.depth_insertion(2:end-1),data_nomag2_ea.Fmag_smooth_cal(2:end-1),xvec);...
+             interp1(data_nomag3_ea.depth_insertion(2:end-1),data_nomag3_ea.Fmag_smooth_cal(2:end-1),xvec);...
+             interp1(data_nomag4_ea.depth_insertion(2:end-1),data_nomag4_ea.Fmag_smooth_cal(2:end-1),xvec)];
 
-% Favg_nomag_mea = mean(Fnomag_mea,1);
-Favg_nomag_mea = nanmean(Fnomag_mea,1);
+Favg_nomag_mea = mean(Fnomag_mea,1);
 std_nomag_mea = std(Fnomag_mea);
 
-Favg_mag = nanmean(Fmag,1);
-% Favg_mag = mean(Fmag,1);
+Favg_mag = mean(Fmag,1);
 std_mag = std(Fmag);
 
 Favg_nomag_ea = nanmean(Fnomag_ea,1);
-% Favg_nomag_ea = mean(Fnomag_ea,1);
 std_nomag_ea = std(Fnomag_ea);
 
 colorsMat2 = distinguishable_colors(6);
 
 % Plot the averages with no shifting
-figure(2); grid on; hold on;
+figure(3); grid on; hold on;
+xlim([0,27]);
+ylim([-40,120]);
 h1 = plot(xvec, Favg_nomag_mea, 'Color', colorsMat2(1,:), 'LineWidth',1,'LineStyle','--');
 fill([xvec fliplr(xvec)],[Favg_nomag_mea + std_nomag_mea, fliplr(Favg_nomag_mea-std_nomag_mea)],...
     'b','FaceAlpha',0.2,'LineStyle','none');
