@@ -100,6 +100,7 @@ classdef MagneticGuidanceData
            
             % initialize default smoothing
             obj = obj.setSmoothSpan(0.06);
+            
             % initialize default calibration slope
             obj = obj.setCalSlope(1);
             

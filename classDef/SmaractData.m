@@ -30,7 +30,7 @@ classdef SmaractData
        end
        
        function time = get.time(obj)
-           time = obj.raw.time;       
+           time = 10^-9*obj.raw.time;       
        end
        
        function time_moving = get.time_moving(obj)

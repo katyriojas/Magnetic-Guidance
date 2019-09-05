@@ -44,9 +44,9 @@ classdef Nano17Data
             if isempty(obj.smooth_span) || (smooth_span ~= obj.smooth_span)
                 obj.smooth_span = smooth_span;
                 obj.force_insertion_smooth_ = ...
-                    [smooth(10^-9*obj.time, obj.Fx, obj.smooth_span, 'loess'), ...
-                     smooth(10^-9*obj.time, obj.Fy, obj.smooth_span, 'loess'), ...
-                     smooth(10^-9*obj.time, obj.Fz, obj.smooth_span, 'loess')];
+                    [smooth(obj.time, obj.Fx, obj.smooth_span, 'loess'), ...
+                     smooth(obj.time, obj.Fy, obj.smooth_span, 'loess'), ...
+                     smooth(obj.time, obj.Fz, obj.smooth_span, 'loess')];
             end
        end
         
@@ -55,7 +55,8 @@ classdef Nano17Data
                 obj.cal_slope = cal_slope;
                 obj.cal_forces_ = cal_slope*[obj.Fx,obj.Fy,obj.Fz];
             end
-        end
+       end
+       
        function time = get.time(obj)
            time = 10^-9*obj.raw.time;
        end

@@ -10,15 +10,15 @@
 clear all; close all; clc;
 ras2lps = diag([-1,-1,1,1]);
 
-% T_mag_fixture_goal = [1.00, 0.00, 0.00, 0.59;...
-%                       0.00, 1.00, 0.00, 108.95;...
-%                       0.00, 0.00, 1.00, -22.34;...
+% T_mag_fixture_goal = [1.00, 0.00, 0.00, 2.68;...
+%                       0.00, 1.00, 0.00, 112.27;...
+%                       0.00, 0.00, 1.00, -29.10;...
 %                       0.00, 0.00, 0.00, 1.00];
                   
-% T_ait_fixture_goal = [1.00, -0.02, 0.03, -0.00;...
-%                       0.02, 1.00, 0.02, 6.08;...
-%                       -0.04, -0.02, 1.00, -28.90;...
-%                       0.00, 0.00, 0.00, 1.00];
+% T_ait_fixture_goal = 0.90, -0.40, -0.16, 3.83
+%                      0.28, 0.83, -0.47, 23.01
+%                      0.32, 0.38, 0.87, -25.62
+%                      0.00, 0.00, 0.00, 1.00];
 
 fileID = fopen('T_ait_fixture.txt','r');
 tform_ait = textscan(fileID, '%f, %f, %f, %f');
@@ -30,11 +30,11 @@ tform_mag = textscan(fileID, '%f, %f, %f, %f');
 T_mag_fixture_goal = [tform_mag{1},tform_mag{2},tform_mag{3},tform_mag{4}];
 fclose(fileID);
 
-% Pull in Transforms
-basepath = strcat(pwd,'\ug-ea-saline-1.25\trial1-post\');
-errname = 'ug1-ea-post-';
-toggleMagSave = 0;
-
+% % Change inputs
+basepath = strcat(pwd,'\g\trial3-pre\');
+errname = 'g3-pre-';
+toggleMagSave = 1;
+%%
 load(strcat(basepath,'T_cochlea_tracker.mat'));
 T_fixture_tracker = AffineTransform_double_3_3;
 load(strcat(basepath,'T_cochlea_tracker (2).mat'));
