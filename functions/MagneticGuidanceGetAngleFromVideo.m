@@ -82,3 +82,14 @@ for ii=2:length(ang_temp)
 
     insertion_angle.angle(ii) = ang_temp(ii);
 end
+
+%% smooth
+insertion_angle.angle_smooth = smooth(insertion_angle.time, insertion_angle.angle, 0.02, 'rloess');
+
+%% plot
+figure(13); clf(13);
+plot(insertion_angle.time, insertion_angle.angle, 'm')
+hold on
+plot(insertion_angle.time, insertion_angle.angle_smooth, 'b')
+xlabel('time (s)')
+ylabel('insertion angle (deg)')
