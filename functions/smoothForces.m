@@ -1,0 +1,9 @@
+function Fmag_smooth = smoothForces(obj,smooth_span)
+
+    force_insertion_smooth = ...
+        [ smooth(10^-9*obj.time, obj.Fx, smooth_span, 'loess'), ...
+          smooth(10^-9*obj.time, obj.Fy, smooth_span, 'loess'), ...
+          smooth(10^-9*obj.time, obj.Fz, smooth_span, 'loess')];
+    Fmag_smooth =  sqrt(sum(force_insertion_smooth.^2, 2));
+      
+end

@@ -37,7 +37,12 @@ flip_magnet_polarity = true; %true equal south out the tip
 ramp_field = true;
 
 % Left or Right Ear
-side = 'R';
+% side = 'R';
+side = 'L';
+
+if side == 'L'
+    path(3,:) = -path(3,:);
+end
 
 % Specify medial_axis interpolation step size and start/end depths
 interp_step = 0.04; % [mm]
@@ -84,13 +89,12 @@ fixture_stl = stlRead(fixture_path);
 % Specify file locations
 
 % PPR file location
-ppr_filepath = strcat('C:\Users\riojaske\Documents\magsteer\',...
-'PreopPlanning\rig_ppr_medial_path\phantom1_preopPlan.ppr');
-[~, basename, ~] = fileparts(ppr_filepath);
+% ppr_filepath = 'rig_ppr_medial_path\phantom1_preopPlan.ppr';
+ppr_filepath = 'rig_ppr_medial_path\tbone4.ppr';
 
 % Medial axis file location
-medial_axis_filepath = strcat('C:\Users\riojaske\Documents\magsteer\',...
-'PreopPlanning\rig_ppr_medial_path\phantom1_medial_axis_ct.txt');
+% medial_axis_filepath = 'rig_ppr_medial_path\phantom1_medial_axis_ct.txt';
+medial_axis_filepath = 'rig_ppr_medial_path\MedialAxis_Tbone4.txt';
 
 % Fixture file location
 fixture_filepath = strcat('C:\Users\riojaske\Documents\magsteer\',...
@@ -160,7 +164,7 @@ end
 
 %% Align medial axis to standard scala tympani coordinate frame
 [medial_axis_st, T_st_lps] = alignMedialAxis(medial_axis_lps_mm,...
-    'R',basal_pts, target_vector_lps);
+    side,basal_pts, target_vector_lps);
 
 % Also compute T_fixture_st (needed later)
 T_fixture_st = T_fixture_lps * inv(T_st_lps);
@@ -498,4 +502,55 @@ fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(3,:));
 fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(4,:));
 fclose(fileID);
 
-save(strcat(newFolderName,'/workspace.mat'));
+if export_data
+    % Export plan to .yaml file for ROS
+
+    newFolderName = strcat('preoperative plans/PreopPlan_',...
+        datestr(now,'yyyy-mm-dd_HH-MM'));
+    mkdir(newFolderName);
+
+    % Save figures
+    savefig(figure(1),strcat(newFolderName,'\Fig1'));
+    savefig(figure(2),strcat(newFolderName,'\Fig2'));
+    savefig(figure(3),strcat(newFolderName,'\Fig3'));
+    savefig(figure(4),strcat(newFolderName,'\Fig4'));
+
+    yamlFileID = fopen(strcat(newFolderName,'/trajectory', '.yaml'),'w');
+    export_data2ros(1:length(planned_pnts),...
+                    insertion_depth,...
+                    currents_scaled(:,planned_pnts),yamlFileID);
+
+
+    % Export T_fixture_ait.txt => target pose of AIT in cochlea fixture frame
+    fileID = fopen(strcat(newFolderName,'/T_ait_fixture','.txt'), 'wt');
+    fprintf(fileID, '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(1,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(2,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(3,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(4,:));
+    fclose(fileID);
+
+    % Export T_fixture_mag.txt => target pose of Omnimagnet in cochlea fixture frame
+    fileID = fopen(strcat(newFolderName,'/T_mag_fixture', '.txt'), 'wt');
+    fprintf(fileID, '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(1,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(2,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(3,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(4,:));
+    fclose(fileID);
+
+    % Export Matlab workspace
+    save(strcat(newFolderName,'/workspace.mat'));
+end
+
+% Commented out - used the code below to generate preop plan figure
+% figure(5); grid on; hold on;
+% % ylim([66 90]);
+% xlabel('Insertion Depth (mm)');
+% ylabel('Bmag (mT)');
+% plot(insertion_depth,Bmag_ramp(planned_pnts)*1000,'k','LineWidth',1);
+% figure();
+% grid on; hold on;
+% plot(insertion_depth,currents_scaled(1,planned_pnts),...
+%      insertion_depth,currents_scaled(2,planned_pnts),...
+%      insertion_depth,currents_scaled(3,planned_pnts));
+% xlabel('Insertion Depth (mm)'); ylabel('Currents (A)');
+% legend('Ix','Iy','Iz');

@@ -44,11 +44,19 @@ classdef MagneticGuidanceData
         Fx   % [mN] Nx1, force_insertion(:,1)
         Fy   % [mN] Nx1, force_insertion(:,2)
         Fz   % [mN] Nx1, force_insertion(:,3)
-        force_insertion_smooth
         Fmag_smooth
         Fx_smooth
         Fy_smooth
         Fz_smooth
+        Fx_cal;
+        Fy_cal;
+        Fz_cal;
+        Fmag_cal;
+        Fmag_smooth_cal;
+        Fx_smooth_cal;
+        Fy_smooth_cal;
+        Fz_smooth_cal;
+        force_insertion_smooth % only recomputed if smooth_span has changed
         force_i_insertion % indices of force measurements taken during insertion
         torque_insertion % [mN] Nx3, torque measurements taken during insertion
         Tmag % [mN] Nx1, ||torque_insertion||
@@ -61,10 +69,15 @@ classdef MagneticGuidanceData
         Ty_smooth
         Tz_smooth
     end
+    
     properties (Access = private)
         smooth_span; % proportion of points to use for smoothing (default = 0.06)
         force_insertion_smooth_  % only recomputed if smooth_span has changed        
         torque_insertion_smooth_ % only recomputed if smooth_span has changed
+        cal_slope;
+        % below are recomputed if cal slope changes
+        force_insertion_cal_;
+        force_insertion_smooth_cal_;
     end
 
     methods
@@ -99,13 +112,14 @@ classdef MagneticGuidanceData
             
             % initialize default smoothing
             obj = obj.setSmoothSpan(0.02); % .06
+            % initialize default calibration slope
+            obj = obj.setCalSlope(1);
         end
         
         function obj = setSmoothSpan(obj, smooth_span)
             % recompute if smooth_span is changed
             if isempty(obj.smooth_span) || (smooth_span ~= obj.smooth_span)
                 obj.smooth_span = smooth_span;
-                
                 obj.force_insertion_smooth_ = ...
                     [ smooth(obj.depth_insertion, obj.Fx, smooth_span, 'loess'), ...
                       smooth(obj.depth_insertion, obj.Fy, smooth_span, 'loess'), ...
@@ -115,6 +129,15 @@ classdef MagneticGuidanceData
                     [ smooth(obj.depth_insertion, obj.Tx, smooth_span, 'loess'), ...
                       smooth(obj.depth_insertion, obj.Ty, smooth_span, 'loess'), ...
                       smooth(obj.depth_insertion, obj.Tz, smooth_span, 'loess')];
+            end
+        end
+        
+        function obj = setCalSlope(obj, cal_slope)
+            if isempty(obj.cal_slope) || (cal_slope ~= obj.cal_slope)
+                obj.cal_slope = cal_slope;
+                obj.force_insertion_cal_= cal_slope*[obj.Fx,obj.Fy,obj.Fz];
+                obj.force_insertion_smooth_cal_= ...
+                    cal_slope*[obj.Fx_smooth,obj.Fy_smooth,obj.Fz_smooth];
             end
         end
                
@@ -209,5 +232,30 @@ classdef MagneticGuidanceData
         function Tmag_smooth = get.Tmag_smooth(obj)
             Tmag_smooth = sqrt(sum(obj.torque_insertion_smooth.^2, 2));
         end
-    end 
+        
+        function Fx_cal = get.Fx_cal(obj)
+            Fx_cal = obj.force_insertion_cal_(:,1);
+        end
+        function Fy_cal = get.Fy_cal(obj)
+            Fy_cal = obj.force_insertion_cal_(:,2);
+        end
+        function Fz_cal = get.Fz_cal(obj)
+            Fz_cal = obj.force_insertion_cal_(:,3);
+        end
+        function Fx_smooth_cal = get.Fx_smooth_cal(obj)
+            Fx_smooth_cal = obj.force_insertion_smooth_cal_(:,1);
+        end
+        function Fy_smooth_cal = get.Fy_smooth_cal(obj)
+            Fy_smooth_cal = obj.force_insertion_smooth_cal_(:,2);
+        end
+        function Fz_smooth_cal = get.Fz_smooth_cal(obj)
+            Fz_smooth_cal = obj.force_insertion_smooth_cal_(:,3);
+        end
+        function Fmag_cal = get.Fmag_cal(obj)
+            Fmag_cal = sqrt(sum(obj.force_insertion_cal_.^2, 2));
+        end
+        function Fmag_smooth_cal = get.Fmag_smooth_cal(obj)
+            Fmag_smooth_cal = sqrt(sum(obj.force_insertion_smooth_cal_.^2, 2));
+        end
+    end
 end
