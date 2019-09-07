@@ -1,4 +1,4 @@
-function force_torque = importRosNano17CSV(filename, startRow, endRow)
+function force_torque = importRosNano17CSV(filename, calibration_slopes, startRow, endRow)
 %IMPORTFILE Import numeric data from a text file as a matrix.
 %   MAGSTEERING20190725TRIAL5MAGFORCE = IMPORTFILE(FILENAME) Reads data from text file FILENAME
 %   for the default selection.
@@ -56,4 +56,12 @@ fclose(fileID);
 
 %% Create output variable
 force_torque = table(dataArray{1:end-1}, 'VariableNames', {'time','Fx','Fy','Fz','Tx','Ty','Tz'});
+
+%% apply calibration
+force_torque.Fx = force_torque.Fx * calibration_slopes(1);
+force_torque.Fy = force_torque.Fy * calibration_slopes(2);
+force_torque.Fz = force_torque.Fz * calibration_slopes(3);
+force_torque.Tx = force_torque.Tx * calibration_slopes(4);
+force_torque.Ty = force_torque.Ty * calibration_slopes(5);
+force_torque.Tz = force_torque.Tz * calibration_slopes(6);
 

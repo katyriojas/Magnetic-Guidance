@@ -36,7 +36,7 @@ data_mag3 = MagneticGuidanceData(filepaths_mag3, avg_cal_slope);
 
 
 % Set smoothing span (proportion of data points)
-smooth_span = 0.1;
+smooth_span = 40;
 
 data_nomag1_mea = data_nomag1_mea.setSmoothSpan(smooth_span);
 % data_nomag1_mea.setSmoothSpan(smooth_span);

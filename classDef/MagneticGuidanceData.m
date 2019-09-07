@@ -29,7 +29,7 @@
 %%
 classdef MagneticGuidanceData
     properties
-        smooth_span; % proportion of points to use for smoothing (default = 0.02)
+        smooth_span; % # of points to use for smoothing (default = 40)
     end
     properties (SetAccess = private)
         depth_insertion % [mm] Nx1, interpolated depth at each force measurement during insertion        
@@ -68,14 +68,13 @@ classdef MagneticGuidanceData
     properties (Access = private)
         force_insertion_smooth_  % only recomputed if smooth_span has changed        
         torque_insertion_smooth_ % only recomputed if smooth_span has changed
-        cal_slope_;
     end
 
     methods
-        function obj = MagneticGuidanceData(filepaths, cal_slope)
+        function obj = MagneticGuidanceData(filepaths, cal_slopes)
             % import forces CSV
             if isfield(filepaths, 'force')
-               obj.nano = Nano17Data(filepaths.force);
+               obj.nano = Nano17Data(filepaths.force, cal_slopes);
             else
                 error('''forces'' struct field not found')
             end
@@ -95,17 +94,14 @@ classdef MagneticGuidanceData
 %             end    
 
             % force indices corresponding to smaract start/stop (i.e. during insertion)
-            obj.force_i_start = find(obj.nano.time >= obj.smaract.time_start_unix, 1);
-            obj.force_i_end   = find(obj.nano.time >= obj.smaract.time_end_unix,   1);
+            obj.force_i_start = find(obj.nano.time_unix >= obj.smaract.time_start_unix, 1);
+            obj.force_i_end   = find(obj.nano.time_unix >= obj.smaract.time_end_unix,   1);
             
             % interpolate to find ch0 position at each force measurement during insertion
             obj.depth_insertion = interp1(obj.smaract.time_unix, obj.smaract.ch0, obj.time_insertion_unix);
             
             % initialize default smoothing
-            obj.smooth_span = 0.02;
-            
-            % set force calibration slope
-            obj.cal_slope_ = cal_slope;
+            obj.smooth_span = 40; % [# samples]
         end
         
         function obj = set.smooth_span(obj, new_smooth_span)
@@ -125,7 +121,7 @@ classdef MagneticGuidanceData
         end
                
         function time_insertion_unix = get.time_insertion_unix(obj)
-            time_insertion_unix = obj.nano.time(obj.force_i_insertion);
+            time_insertion_unix = obj.nano.time_unix(obj.force_i_insertion);
         end
         
         function time_insertion = get.time_insertion(obj)
@@ -133,7 +129,7 @@ classdef MagneticGuidanceData
         end    
         
         function force_insertion = get.force_insertion(obj)
-            force_insertion = obj.cal_slope_ * obj.nano.force(obj.force_i_insertion);
+            force_insertion = obj.nano.force(obj.force_i_insertion);
         end
         
         function Fx = get.Fx(obj)

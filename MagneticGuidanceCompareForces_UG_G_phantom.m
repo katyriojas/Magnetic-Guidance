@@ -2,7 +2,7 @@
 % clear all; close all; clc;
 
 addpath('classDef','functions','data');
-load('avg_cal_slope.mat');
+load('avg_cal_slope.mat'); % loads cal_slopes
 
 % Filepaths to CSVs exported from ROS bags
 base_path = 'data\phantom\';
@@ -44,24 +44,24 @@ filepaths_nomag4_ea.smaract = fullfile(base_path, 'unguided_ea_saline_1.25\phant
 filepaths_nomag4_ea.force   = fullfile(base_path, 'unguided_ea_saline_1.25\phantom_ug_ea2_trial4_1.25_force.csv');
 
 %% create data objects
-data_nomag1_mea = MagneticGuidanceData(filepaths_nomag1_mea, avg_cal_slope);
-data_nomag2_mea = MagneticGuidanceData(filepaths_nomag2_mea, avg_cal_slope);
-data_nomag3_mea = MagneticGuidanceData(filepaths_nomag3_mea, avg_cal_slope);
-data_nomag4_mea = MagneticGuidanceData(filepaths_nomag4_mea, avg_cal_slope);
+data_nomag1_mea = MagneticGuidanceData(filepaths_nomag1_mea, cal_slopes);
+data_nomag2_mea = MagneticGuidanceData(filepaths_nomag2_mea, cal_slopes);
+data_nomag3_mea = MagneticGuidanceData(filepaths_nomag3_mea, cal_slopes);
+data_nomag4_mea = MagneticGuidanceData(filepaths_nomag4_mea, cal_slopes);
 
-data_mag1 = MagneticGuidanceData(filepaths_mag1, avg_cal_slope);
-data_mag2 = MagneticGuidanceData(filepaths_mag2, avg_cal_slope);
-data_mag3 = MagneticGuidanceData(filepaths_mag3, avg_cal_slope);
-data_mag4 = MagneticGuidanceData(filepaths_mag4, avg_cal_slope);
+data_mag1 = MagneticGuidanceData(filepaths_mag1, cal_slopes);
+data_mag2 = MagneticGuidanceData(filepaths_mag2, cal_slopes);
+data_mag3 = MagneticGuidanceData(filepaths_mag3, cal_slopes);
+data_mag4 = MagneticGuidanceData(filepaths_mag4, cal_slopes);
 
-data_nomag1_ea = MagneticGuidanceData(filepaths_nomag1_ea, avg_cal_slope);
-data_nomag2_ea = MagneticGuidanceData(filepaths_nomag2_ea, avg_cal_slope);
-data_nomag3_ea = MagneticGuidanceData(filepaths_nomag3_ea, avg_cal_slope);
-data_nomag4_ea = MagneticGuidanceData(filepaths_nomag4_ea, avg_cal_slope);
+data_nomag1_ea = MagneticGuidanceData(filepaths_nomag1_ea, cal_slopes);
+data_nomag2_ea = MagneticGuidanceData(filepaths_nomag2_ea, cal_slopes);
+data_nomag3_ea = MagneticGuidanceData(filepaths_nomag3_ea, cal_slopes);
+data_nomag4_ea = MagneticGuidanceData(filepaths_nomag4_ea, cal_slopes);
 
 
-% set smoothing span (proportion of data points)
-force_smooth_span = 0.06;
+%% set smoothing span (proportion of data points)
+force_smooth_span = 40; % [# samples]
 
 data_nomag1_mea.smooth_span = force_smooth_span;
 data_nomag2_mea.smooth_span = force_smooth_span;
@@ -78,8 +78,9 @@ data_nomag2_ea.smooth_span = force_smooth_span;
 data_nomag3_ea.smooth_span = force_smooth_span;
 data_nomag4_ea.smooth_span = force_smooth_span;
 
+
 %% determine angular insertion depths from processed video
-angle_smooth_span = 0.015;
+angle_smooth_span = 20;
 mag1.angular_depth = MagneticGuidanceGetAngleFromVideo(...
     'D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL\phantom_g_mea1_trial1_1.25\trial1-guided-mea1-1.25-tracked.MP4'...
     ,angle_smooth_span);
@@ -88,33 +89,45 @@ nomag1.angular_depth = MagneticGuidanceGetAngleFromVideo(...
     'D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL\phantom_ug_mea1_trial1_1.25\trial1-ug-mea1-tracked.mp4'...
     ,angle_smooth_span);
 
-%%
-figure; hold on
-plot(nomag1.angular_depth.time, nomag1.angular_depth.angle, 'r')
-plot(nomag1.angular_depth.time, nomag1.angular_depth.angle_smooth, 'b')
-
-%% interpolate to find angular depth at each force measurement time
-
+% interpolate to find angular depth at each force measurement time
 mag1.interp_angdepth   = interp1(mag1.angular_depth.time, mag1.angular_depth.angle, data_mag1.time_insertion, 'linear', 'extrap');
 nomag1.interp_angdepth = interp1(nomag1.angular_depth.time, nomag1.angular_depth.angle, data_nomag1_mea.time_insertion, 'linear', 'extrap');
 
+
+%% testing
+force_smooth_span = 40;
+data_mag1.smooth_span = force_smooth_span;
+
+figure(1); clf(1); 
+hold on; grid on;
+
+plot(mag1.interp_angdepth, data_mag1.Fx,          'Color', [1,0,0, 0.3], 'LineWidth', 1);
+h_mag1(1) = plot(mag1.interp_angdepth, data_mag1.Fx_smooth,   'Color', [1,0,0, 1.0], 'LineWidth', 2);
+plot(mag1.interp_angdepth, data_mag1.Fy,          'Color', [0,1,0, 0.3], 'LineWidth', 1);
+h_mag1(2) = plot(mag1.interp_angdepth, data_mag1.Fy_smooth,   'Color', [0,1,0, 1.0], 'LineWidth', 2);
+plot(mag1.interp_angdepth, data_mag1.Fz,          'Color', [0,0,1, 0.3], 'LineWidth', 1);
+h_mag1(3) = plot(mag1.interp_angdepth, data_mag1.Fz_smooth,   'Color', [0,0,1, 1.0], 'LineWidth', 2);
+
+% figure; hold on
+% plot(nomag1.angular_depth.time, nomag1.angular_depth.angle, 'r')
+% plot(nomag1.angular_depth.time, nomag1.angular_depth.angle_smooth, 'b')
 
 %%
 figure(1); clf(1); 
 hold on; grid on;
 
-% plot(mag1.interp_angdepth, data_mag1.Fx,          'Color', [1,0,0, 0.3], 'LineWidth', 1);
+plot(mag1.interp_angdepth, data_mag1.Fx,          'Color', [1,0,0, 0.3], 'LineWidth', 1);
 h_mag1(1) = plot(mag1.interp_angdepth, data_mag1.Fx_smooth,   'Color', [1,0,0, 1.0], 'LineWidth', 2);
-% plot(mag1.interp_angdepth, data_mag1.Fy,          'Color', [0,1,0, 0.3], 'LineWidth', 1);
+plot(mag1.interp_angdepth, data_mag1.Fy,          'Color', [0,1,0, 0.3], 'LineWidth', 1);
 h_mag1(2) = plot(mag1.interp_angdepth, data_mag1.Fy_smooth,   'Color', [0,1,0, 1.0], 'LineWidth', 2);
-% plot(mag1.interp_angdepth, data_mag1.Fz,          'Color', [0,0,1, 0.3], 'LineWidth', 1);
+plot(mag1.interp_angdepth, data_mag1.Fz,          'Color', [0,0,1, 0.3], 'LineWidth', 1);
 h_mag1(3) = plot(mag1.interp_angdepth, data_mag1.Fz_smooth,   'Color', [0,0,1, 1.0], 'LineWidth', 2);
 
-% plot(nomag1.interp_angdepth, data_nomag1_mea.Fx,          'Color', [1,0,0, 0.3], 'LineWidth', 1);
+plot(nomag1.interp_angdepth, data_nomag1_mea.Fx,          'Color', [1,0,0, 0.3], 'LineWidth', 1);
 h_mag1(1) = plot(nomag1.interp_angdepth, data_nomag1_mea.Fx_smooth,   'Color', [1,0,0, 0.3], 'LineWidth', 2);
-% plot(nomag1.interp_angdepth, data_nomag1_mea.Fy,          'Color', [0,1,0, 0.3], 'LineWidth', 1);
+plot(nomag1.interp_angdepth, data_nomag1_mea.Fy,          'Color', [0,1,0, 0.3], 'LineWidth', 1);
 h_mag1(2) = plot(nomag1.interp_angdepth, data_nomag1_mea.Fy_smooth,   'Color', [0,1,0, 0.3], 'LineWidth', 2);
-% plot(nomag1.interp_angdepth, data_nomag1_mea.Fz,          'Color', [0,0,1, 0.3], 'LineWidth', 1);
+plot(nomag1.interp_angdepth, data_nomag1_mea.Fz,          'Color', [0,0,1, 0.3], 'LineWidth', 1);
 h_mag1(3) = plot(nomag1.interp_angdepth, data_nomag1_mea.Fz_smooth,   'Color', [0,0,1, 0.3], 'LineWidth', 2);
 
 title('Force vs Angular Insertion Depth')
