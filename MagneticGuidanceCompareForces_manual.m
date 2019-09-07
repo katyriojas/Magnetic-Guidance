@@ -1,5 +1,5 @@
 %% Import Force and Smaract data
-clear all; close all; clc;
+% clear all; close all; clc;
 
 addpath('functions','classDef','data');
 load('avg_cal_slope.mat');

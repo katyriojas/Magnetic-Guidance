@@ -1,4 +1,4 @@
-function [scala_tympani, theta] = scalaTympaniMedialAxis(varargin)
+function [scala_tympani_path, theta] = scalaTympaniMedialAxis(varargin)
 %   Outputs the medial axis for a typical human scala tympani.
 %   
 %   Equations and constants from:
@@ -28,10 +28,11 @@ function [scala_tympani, theta] = scalaTympaniMedialAxis(varargin)
 %   July 2019
 
 %% parse inputs
-if nargin == 0
-    plot_flag = false;
-    theta_step = 0.1;
-elseif nargin <= 2
+
+plot_flag = false;
+theta_step = 0.1;
+
+if nargin > 0
     for ii=1:length(varargin)
         if isa(varargin{ii},'double')
             theta_step = varargin{ii};
@@ -136,9 +137,12 @@ alpha_smooth = bsxfun(@atan2d, ST_gradient_smooth(2,:), ST_gradient_smooth(1,:))
 x_prime = [cosd(alpha_smooth); sind(alpha_smooth)];
 
 %% apply adjustments
-scala_tympani = [scala_tympani_smooth(1,:) + adj_x_prime.*x_prime(1,:); ...
+scala_tympani_adj = [scala_tympani_smooth(1,:) + adj_x_prime.*x_prime(1,:); ...
                  scala_tympani_smooth(2,:) + adj_x_prime.*x_prime(2,:); ...
                  scala_tympani_smooth(3,:) + adj_z_prime];
+
+%% choose path to output
+scala_tympani_path = scala_tympani_smooth;
 
 %% plot
 if plot_flag
