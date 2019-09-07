@@ -1,7 +1,7 @@
 %% segmentPixelsByColor
 %
 %   rgb_image => [NxMx3] color image array
-%   rgb_color => [1x3] desired color to segment, values must by 0->1 (e.g. red = [1 0 0])
+%   rgb_target_color => [1x3] desired color to segment, values must by 0->1 (e.g. red = [1 0 0])
 %   hsv_tolerance => 'percentage' differences allowable (0->1); default = [0.05, 0.1, 0.1]
 %
 %   matching_pixels => [NxM] logical array of segmented pixels
@@ -10,15 +10,16 @@
 %   Trevor Bruns
 %   September 2019
 
-function matching_pixels = segmentPixelsByColor(rgb_image, rgb_color, hsv_tolerance)
-    if nargin < 3
-        hsv_tolerance = [0.1, 0.1, 0.1]; % segment pixels with a hue +- this tolerance
-    end
+function matching_pixels = segmentPixelsByColor(rgb_image, rgb_target_color, hsv_tolerance)
     
-    image_size = size(rgb_image);
-    hsv_color = rgb2hsv(rgb_color);
+    %% convert from RGB to HSV
+    hsv_color = rgb2hsv(rgb_target_color);
     hsv_image = rgb2hsv(rgb_image);
     
+    %% tolerance parameters
+    if nargin < 3
+    hsv_tolerance = [0.1, 0.1, 0.1]; % segment pixels with a hue +- this tolerance
+    end
     
     hue_low  = hsv_color(1) - hsv_tolerance(1);
     hue_high = hsv_color(1) + hsv_tolerance(1);
@@ -54,7 +55,7 @@ function matching_pixels = segmentPixelsByColor(rgb_image, rgb_color, hsv_tolera
         val_high = 1;
     end
     
-    % segment matching pixels
+    %% segment matching pixels
     % hue
     if wrap_around
         % matches if between 0->low OR between high->1
@@ -68,6 +69,5 @@ function matching_pixels = segmentPixelsByColor(rgb_image, rgb_color, hsv_tolera
     matching_pixels = matching_pixels & ((hsv_image(:,:,2) >= sat_low) & (hsv_image(:,:,2) <= sat_high));
     
     % value
-    matching_pixels = matching_pixels & ((hsv_image(:,:,3) >= val_low) & (hsv_image(:,:,3) <= val_high));
-                
+    matching_pixels = matching_pixels & ((hsv_image(:,:,3) >= val_low) & (hsv_image(:,:,3) <= val_high));            
 end

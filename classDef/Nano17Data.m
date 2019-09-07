@@ -4,6 +4,7 @@ classdef Nano17Data
        raw
    end
    properties (Dependent, SetAccess = private)
+       time_unix  % [ns] Nx1, UNIX time
        time   % [ns] Nx1
        force  % [mN] Nx3
        Fmag   % [mN] Nx1
@@ -15,10 +16,6 @@ classdef Nano17Data
        Tx     % [Nmm] Nx1
        Ty
        Tz
-       Fx_cal
-       Fy_cal
-       Fz_cal
-       Fmag_cal
        force_insertion_smooth
        Fx_smooth
        Fy_smooth
@@ -27,7 +24,7 @@ classdef Nano17Data
        time_vector
    end
    properties (SetAccess = private)
-       smooth_span
+       smooth_span_
        cal_slope
        force_insertion_smooth_
        cal_forces_
@@ -45,9 +42,9 @@ classdef Nano17Data
             if isempty(obj.smooth_span) || (smooth_span ~= obj.smooth_span)
                 obj.smooth_span = smooth_span;
                 obj.force_insertion_smooth_ = ...
-                    [smooth(10^-9*obj.time, obj.Fx, obj.smooth_span, 'loess'), ...
-                     smooth(10^-9*obj.time, obj.Fy, obj.smooth_span, 'loess'), ...
-                     smooth(10^-9*obj.time, obj.Fz, obj.smooth_span, 'loess')];
+                    [smooth(obj.time, obj.Fx, obj.smooth_span, 'loess'), ...
+                     smooth(obj.time, obj.Fy, obj.smooth_span, 'loess'), ...
+                     smooth(obj.time, obj.Fz, obj.smooth_span, 'loess')];
             end
        end
         
@@ -58,7 +55,7 @@ classdef Nano17Data
             end
         end
        function time = get.time(obj)
-           time = 10^-9*obj.raw.time;
+           time = obj.raw.time;
        end
        function time_vector = get.time_vector(obj)
            time_vector = obj.time - obj.time(1); % cumulative time vec
@@ -104,21 +101,7 @@ classdef Nano17Data
           Tmag = sqrt(sum(obj.torque.^2, 2));
        end
        
-       function Fx_cal = get.Fx_cal(obj)
-            Fx_cal = obj.cal_forces_(:,1);
-       end
-        
-        function Fy_cal = get.Fy_cal(obj)
-            Fy_cal = obj.cal_forces_(:,2);
-        end
-        
-        function Fz_cal = get.Fz_cal(obj)
-            Fz_cal = obj.cal_forces_(:,3);
-        end
-        
-        function Fmag_cal = get.Fmag_cal(obj)
-            Fmag_cal = sqrt(sum(obj.cal_forces_.^2, 2));
-        end
+       
         function force_insertion_smooth = get.force_insertion_smooth(obj)
             force_insertion_smooth = obj.force_insertion_smooth_;
         end

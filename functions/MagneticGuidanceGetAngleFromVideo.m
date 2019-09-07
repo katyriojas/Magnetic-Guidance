@@ -1,13 +1,26 @@
 %% MagneticGuidanceGetAngleFromVideo
 %
+%   insertion_angle.time  => [s] time since start of insertion
+%   insertion_angle.angle => [deg] angle of the tip in cochlea frame
+%   insertion_angle.angle_smooth => angle smoothed by smooth_span
+%
 % Trevor Bruns
 % September 2019
 
-%% user parameters
+function insertion_angle = MagneticGuidanceGetAngleFromVideo(video_path, smooth_span)
 
-% video location
-folderpath_vid = 'D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL\phantom_g_mea1_trial1_1.25';
-filename_vid     = 'trial1-guided-mea1-1.25-tracked.MP4';
+%% parameters
+
+if nargin < 1
+    % sample video location
+    folderpath_vid = 'D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL\phantom_g_mea1_trial1_1.25';
+    filename_vid = 'trial1-guided-mea1-1.25-tracked.MP4';
+    video_path = fullfile(folderpath_vid, filename_vid);
+end
+
+if nargin < 2
+    smooth_span = 0.02;
+end
 
 % reference marker colors
 center.color = [1 0 0]; % red
@@ -21,7 +34,7 @@ hsv_tolerance = [0.1, 0.3, 0.3];
 %% find 0 degree angle reference
 
 % load video and read first frame
-vid = VideoReader(fullfile(folderpath_vid, filename_vid));
+vid = VideoReader(video_path);
 vid.CurrentTime = 0;
 curr_frame = readFrame(vid);
 
@@ -49,7 +62,7 @@ insertion_angle.angle = zeros(1,num_frames); % [deg]
 frame_count = 0;
 vid.CurrentTime = 0;
 
-tic;
+% tic;
 while hasFrame(vid)
     % load next frame
     curr_frame = readFrame(vid);
@@ -68,8 +81,13 @@ while hasFrame(vid)
     tip.vec = tip.props.Centroid - center.props.Centroid;
     insertion_angle.time(frame_count) = vid.CurrentTime;
     insertion_angle.angle(frame_count) = rad2deg( vectorAngle(angle0.vec, tip.vec) );
+    
 end
-toc
+% toc
+
+% ensure time increases monotonically (last frame shows previous time for some reason)
+insertion_angle.time(end)  = [];
+insertion_angle.angle(end) = [];
 
 %% account 360 degree 'rollover'
 ang_temp = insertion_angle.angle;
@@ -84,12 +102,14 @@ for ii=2:length(ang_temp)
 end
 
 %% smooth
-insertion_angle.angle_smooth = smooth(insertion_angle.time, insertion_angle.angle, 0.02, 'rloess');
+insertion_angle.angle_smooth = smooth(insertion_angle.time, insertion_angle.angle, smooth_span, 'rloess')';
 
-%% plot
-figure(13); clf(13);
-plot(insertion_angle.time, insertion_angle.angle, 'm')
-hold on
-plot(insertion_angle.time, insertion_angle.angle_smooth, 'b')
-xlabel('time (s)')
-ylabel('insertion angle (deg)')
+end
+
+% %% plot
+% figure(13); clf(13);
+% plot(1.25*insertion_angle.time, insertion_angle.angle, 'm')
+% hold on
+% plot(1.25*insertion_angle.time, insertion_angle.angle_smooth, 'b')
+% xlabel('time (s)')
+% ylabel('insertion angle (deg)')
