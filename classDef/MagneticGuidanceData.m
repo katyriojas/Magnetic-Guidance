@@ -48,31 +48,29 @@ classdef MagneticGuidanceData
         Fy_smooth
         Fz_smooth
         force_i_insertion % indices of force measurements taken during insertion    
-        Fx_cal;
-        Fy_cal;
-        Fz_cal;
-        Fmag_cal;
-        Fmag_smooth_cal;
-        Fx_smooth_cal;
-        Fy_smooth_cal;
-        Fz_smooth_cal;
+        Fx_smooth_cal
+        Fy_smooth_cal
+        Fz_smooth_cal
         force_insertion_smooth % only recomputed if smooth_span has changed
+        Fx_smooth_st
+        Fy_smooth_st
+        Fz_smooth_st
+        Fmag_smooth_st
     end
     
     properties (Access = private)
-        smooth_span; % proportion of points to use for smoothing (default = 0.06)
-        cal_slope;
+        smooth_span % proportion of points to use for smoothing (default = 0.06)
+        cal_slope % calibration slope for ati force sensor (default = 1)
+        T
         force_insertion_smooth_
-        % below are recomputed if cal slope changes
-        force_insertion_cal_;
-        force_insertion_smooth_cal_;
+        F_smooth_st_
     end
 
     methods
-        function obj = MagneticGuidanceData(filepaths)
+        function obj = MagneticGuidanceData(filepaths,cal_slope)
             % import forces CSV
             if isfield(filepaths, 'force')
-               obj.nano = Nano17Data(filepaths.force);
+               obj.nano = Nano17Data(filepaths.force,cal_slope);
             else
                 error('''forces'' struct field not found')
             end
@@ -83,26 +81,16 @@ classdef MagneticGuidanceData
             else
                 error('''smaract'' struct field not found')
             end
-            
-            % import dac voltages CSV
-%             if isfield(filepaths, 'smaract')
-%                obj.dac = importRosDacCSV(filepaths.dac);
-%             else
-%                 disp('''dac'' struct field not found')
-%             end    
 
             % force indices corresponding to smaract start/stop (i.e. during insertion)
-            obj.force_i_start = find(obj.nano.time >= obj.smaract.time_start, 1);
-            obj.force_i_end   = find(obj.nano.time >= obj.smaract.time_end,   1);
+            obj.force_i_start = find(obj.nano.time_unix >= obj.smaract.time_unix_start, 1);
+            obj.force_i_end   = find(obj.nano.time_unix >= obj.smaract.time_unix_end,   1);
             
             % interpolate to find ch0 position at each force measurement during insertion
             obj.depth_insertion = interp1(obj.smaract.time, obj.smaract.ch0, obj.time_insertion);
            
             % initialize default smoothing
             obj = obj.setSmoothSpan(0.06);
-            
-            % initialize default calibration slope
-            obj = obj.setCalSlope(1);
             
         end
         
@@ -117,12 +105,17 @@ classdef MagneticGuidanceData
             end
         end
         
-        function obj = setCalSlope(obj, cal_slope)
-            if isempty(obj.cal_slope) || (cal_slope ~= obj.cal_slope)
-                obj.cal_slope = cal_slope;
-                obj.force_insertion_cal_= cal_slope*[obj.Fx,obj.Fy,obj.Fz];
-                obj.force_insertion_smooth_cal_= ...
-                    cal_slope*[obj.Fx_smooth,obj.Fy_smooth,obj.Fz_smooth];
+        
+        function obj = setT(obj, T)
+            if isempty(obj.T) || (T ~= obj.T)
+                obj.T = T; % pull out transformation matrix
+                
+                % Rotate force vectors to align with ST frame
+                for ii = 1:length(obj.force_insertion_smooth_)
+                      obj.F_smooth_st_(ii,:) = ...
+                      obj.T(1:3,1:3)*obj.force_insertion_smooth_(ii,:)';
+                end
+                
             end
         end
                
@@ -171,32 +164,20 @@ classdef MagneticGuidanceData
         end
         
         function force_i_insertion = get.force_i_insertion(obj)
-            force_i_insertion = [obj.force_i_start:obj.force_i_end]';
+            force_i_insertion = (obj.force_i_start:obj.force_i_end)';
         end
         
-        function Fx_cal = get.Fx_cal(obj)
-            Fx_cal = obj.force_insertion_cal_(:,1);
+        function Fx_smooth_st = get.Fx_smooth_st(obj)
+            Fx_smooth_st = obj.F_smooth_st_(:,1);
         end
-        function Fy_cal = get.Fy_cal(obj)
-            Fy_cal = obj.force_insertion_cal_(:,2);
+        function Fy_smooth_st = get.Fy_smooth_st(obj)
+            Fy_smooth_st = obj.F_smooth_st_(:,2);
         end
-        function Fz_cal = get.Fz_cal(obj)
-            Fz_cal = obj.force_insertion_cal_(:,3);
+        function Fz_smooth_st = get.Fz_smooth_st(obj)
+            Fz_smooth_st = obj.F_smooth_st_(:,3);
         end
-        function Fx_smooth_cal = get.Fx_smooth_cal(obj)
-            Fx_smooth_cal = obj.force_insertion_smooth_cal_(:,1);
-        end
-        function Fy_smooth_cal = get.Fy_smooth_cal(obj)
-            Fy_smooth_cal = obj.force_insertion_smooth_cal_(:,2);
-        end
-        function Fz_smooth_cal = get.Fz_smooth_cal(obj)
-            Fz_smooth_cal = obj.force_insertion_smooth_cal_(:,3);
-        end
-        function Fmag_cal = get.Fmag_cal(obj)
-            Fmag_cal = sqrt(sum(obj.force_insertion_cal_.^2, 2));
-        end
-        function Fmag_smooth_cal = get.Fmag_smooth_cal(obj)
-            Fmag_smooth_cal = sqrt(sum(obj.force_insertion_smooth_cal_.^2, 2));
+        function Fmag_smooth_st = get.Fmag_smooth_st(obj)
+            Fmag_smooth_st = sqrt(sum(obj.F_smooth_st_.^2, 2));
         end
     end
 end

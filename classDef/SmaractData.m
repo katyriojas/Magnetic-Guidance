@@ -6,10 +6,11 @@ classdef SmaractData
        i_end       
    end
    properties (Dependent, SetAccess = private)
-       time        % [ns] Nx1
-       time_moving % [ns] Mx1
-       time_start % [ns] time when movement starts
-       time_end   % [ns] time when movement ends
+       time_unix  %[ns]
+       time        % [s] Nx1
+       time_unix_moving % [ns] Mx1
+       time_unix_start % [ns] time when movement starts
+       time_unix_end   % [ns] time when movement ends
        ch0 % [mm] Nx1
        ch1 % [mm] Nx1
        ch0_moving % [mm] Mx1 ch0 positions while moving
@@ -29,20 +30,24 @@ classdef SmaractData
            obj.i_end = length(obj.ch0) - find( abs(diff(flipud(obj.ch0))) > 0.001, 1);
        end
        
+       function time_unix = get.time_unix(obj)
+           time_unix = obj.raw.time;       
+       end
+       
        function time = get.time(obj)
            time = 10^-9*obj.raw.time;       
        end
        
-       function time_moving = get.time_moving(obj)
-           time_moving = obj.time(obj.i_range);
+       function time_unix_moving = get.time_unix_moving(obj)
+           time_unix_moving = obj.time_unix(obj.i_range);
        end
        
-       function time_start = get.time_start(obj)
-           time_start = obj.time(obj.i_start);
+       function time_unix_start = get.time_unix_start(obj)
+           time_unix_start = obj.time_unix(obj.i_start);
        end
 
-       function time_end = get.time_end(obj)
-           time_end = obj.time(obj.i_end);
+       function time_unix_end = get.time_unix_end(obj)
+           time_unix_end = obj.time_unix(obj.i_end);
        end
        
        function ch0 = get.ch0(obj)
