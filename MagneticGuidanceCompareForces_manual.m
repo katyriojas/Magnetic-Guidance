@@ -41,6 +41,26 @@ data_pman4 = data_pman4.setSmoothSpan(smooth_span);
 data_cman1 = data_cman1.setSmoothSpan(smooth_span);
 data_cman2 = data_cman2.setSmoothSpan(smooth_span);
 data_cman3 = data_cman3.setSmoothSpan(smooth_span);
+%% 
+% Notes on Manual Insertion Trim Times From Cadaver Manual 
+% Trial 1
+tend_vid_peak = 69; % [s]
+tend_F_peak = 81.8599; %[s]
+t1_endinsertion_vid = 54; % [s]
+diff_vid = tend_vid_peak - t1_endinsertion_vid; %[s]
+t1start_F = 8.7; % [s]
+
+% Trial 2
+t2_vid_peak = 5.17; % first time force goes back to zero
+t2_startinsertion_vid = 12.2; % first time when inserting
+t2_endinsertion_vid = 83;
+t2_start_F = 1;
+
+% Trial 3
+t3_peak_v = 3.68; % [s]
+t3_startinsertion_v = 11.68; %[s]
+t3start_F = 10.7;
+tend_vid_end = 96.8; % [s]
 
 %% Find trim points for time vectors
 % visually determine stop and end points 
@@ -254,23 +274,4 @@ plot(data_cman2.time_vector,data_cman2.Fmag,'Color','b');
 subplot(2,3,6); grid on; hold on; 
 plot(data_cman3.time_vector,data_cman3.Fmag,'Color','b');
 
-%% 
-% Notes on manual insertion Times
-% Cadaver Manual Insertion 1: 
-% Trial 1
-tend_vid_peak = 69; % [s]
-tend_F_peak = 81.8599; %[s]
-t2_end_vid_insertion = 54; % [s]
-diff_vid = tend_vid_peak - tend_vid_insertion; %[s]
-tstart_F = 8.7; % [s]
 
-% Trial 2
-tstart2_vid_peak = 5.17; % first time force goes back to zero
-tstart2_vid_insertion = 12.2; % first time when inserting
-t2_end_vid_insertion = 83;
-
-% Trial 3
-tstart_vid_peak = 3.68; % [s]
-tstart_vid_start = 11.68; %[s]
-tstart_F = 10.7;
-tend_vid_end = 

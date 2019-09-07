@@ -549,7 +549,7 @@ end
 
 % Commented out - used the code below to generate preop plan figure
 % figure(5); grid on; hold on;
-% % ylim([66 90]);
+% % ylim([66 86]); xlim([8 27]);
 % xlabel('Insertion Depth (mm)');
 % ylabel('Bmag (mT)');
 % plot(insertion_depth,Bmag_ramp(planned_pnts)*1000,'k','LineWidth',1);
