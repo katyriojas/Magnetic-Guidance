@@ -9,7 +9,7 @@ function markers = importPremiereProMarkers(filename, fps, dataLines)
 %  for dis-contiguous row intervals.
 %
 %  Example:
-%  markers = importfile("D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL\phantom_manual_trial3_ea1\phantom-manual-trial3-markers.csv", [2, Inf]);
+%  markers = importPremiereProMarkers('D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL\phantom_manual_trial3_ea1\phantom-manual-trial3-markers.csv', 60, [2, Inf]);
 %
 %  See also READTABLE.
 %
