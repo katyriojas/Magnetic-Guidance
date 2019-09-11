@@ -3,13 +3,11 @@
 % Last Updated: 8/30/19
 % Check Transformation Matrices
 
-% Note on 8/20 - it matters whether I calculated the error with the tracker
-% positions or with the transformed relative positions -- look into this
-% but how it is currently written it matches the python code
-
 clear all; close all; clc;
 ras2lps = diag([-1,-1,1,1]);
 
+% Pull in desired transforms (move mag and ait to fixture 
+% frame expressed in each of their frames)
 % T_mag_fixture_goal = [1.00, 0.00, 0.00, 0.59;...
 %                       0.00, 1.00, 0.00, 108.95;...
 %                       0.00, 0.00, 1.00, -22.34;...
@@ -31,56 +29,56 @@ T_mag_fixture_goal = [tform_mag{1},tform_mag{2},tform_mag{3},tform_mag{4}];
 fclose(fileID);
 
 % Pull in Transforms
-basepath = strcat(pwd,'\ug-ea-saline-1.25\trial1-post\');
-errname = 'ug1-ea-post-';
-toggleMagSave = 0;
+basepath = strcat(pwd,'\g-saline-1.25\trial4-pre\');
+errname = 'g4-pre-';
+toggleMagSave = 1;
 
 load(strcat(basepath,'T_cochlea_tracker.mat'));
-T_fixture_tracker = AffineTransform_double_3_3;
+T_tracker_fixture = AffineTransform_double_3_3;
 load(strcat(basepath,'T_cochlea_tracker (2).mat'));
-T_fixture_tracker2 = AffineTransform_double_3_3;
+T_tracker2_fixture = AffineTransform_double_3_3;
 load(strcat(basepath,'T_cochlea_tracker (3).mat'));
-T_fixture_tracker3 = AffineTransform_double_3_3;
-T_fixture_tracker_avg = mean([T_fixture_tracker,T_fixture_tracker2,T_fixture_tracker3],2);
+T_tracker3_fixture = AffineTransform_double_3_3;
+T_tracker_fixture_avg = mean([T_tracker_fixture,T_tracker2_fixture,T_tracker3_fixture],2);
 
-load(strcat(basepath,'T_ait_tracker.mat'));
-T_ait_tracker = AffineTransform_double_3_3;
+load(strcat(basepath,'T_ait_tracker.mat')); % Loads in affine transform_3_3
+T_tracker_ait = AffineTransform_double_3_3;
 load(strcat(basepath,'T_ait_tracker (2).mat'));
-T_ait_tracker2 = AffineTransform_double_3_3;
+T_tracker2_ait = AffineTransform_double_3_3;
 load(strcat(basepath,'T_ait_tracker (3).mat'));
-T_ait_tracker3 = AffineTransform_double_3_3;
-T_ait_tracker_avg = mean([T_ait_tracker,T_ait_tracker2,T_ait_tracker3],2);
+T_tracker3_ait = AffineTransform_double_3_3;
+T_tracker_ait_avg = mean([T_tracker_ait,T_tracker2_ait,T_tracker3_ait],2);
 
 load(strcat(basepath,'T_mag_tracker.mat'));
-T_mag_tracker = AffineTransform_double_3_3;
+T_tracker_mag = AffineTransform_double_3_3;
 load(strcat(basepath,'T_mag_tracker (2).mat'));
-T_mag_tracker2 = AffineTransform_double_3_3;
+T_tracker2_mag = AffineTransform_double_3_3;
 load(strcat(basepath,'T_mag_tracker (3).mat'));
-T_mag_tracker3 = AffineTransform_double_3_3;
-T_mag_tracker_avg = mean([T_mag_tracker,T_mag_tracker2,T_mag_tracker3],2);
+T_tracker3_mag = AffineTransform_double_3_3;
+T_tracker_mag_avg = mean([T_tracker_mag,T_tracker2_mag,T_tracker3_mag],2);
 
 % Convert Transform to Tracker Space
-T_fixture_tracker = savedTransform2TrackerSpace(T_fixture_tracker_avg);
-T_ait_tracker = savedTransform2TrackerSpace(T_ait_tracker_avg);
-T_mag_tracker = savedTransform2TrackerSpace(T_mag_tracker_avg);
+T_tracker_fixture = savedTransform2TrackerSpace(T_tracker_fixture_avg);
+T_tracker_ait = savedTransform2TrackerSpace(T_tracker_ait_avg);
+T_tracker_mag = savedTransform2TrackerSpace(T_tracker_mag_avg);
 
-T_ait_tracker_goal = T_fixture_tracker*inv(T_ait_fixture_goal);
-T_mag_tracker_goal = T_fixture_tracker*inv(T_mag_fixture_goal); % v1 in python code
+T_tracker_ait_goal = T_tracker_fixture*inv(T_ait_fixture_goal);
+T_tracker_mag_goal = T_tracker_fixture*inv(T_mag_fixture_goal); % v1 in python code
 
-ait_tip_offset = T_ait_tracker(1:3,4) - T_ait_tracker_goal(1:3,4);
-mag_center_offset = T_mag_tracker(1:3,4) - T_mag_tracker_goal(1:3,4);
+T_trackerait_trackeraitgoal = inv(T_tracker_ait)*T_tracker_ait_goal;
+T_trackermag_trackermaggoal = inv(T_tracker_mag)*T_tracker_mag_goal;
 
-ait_tip_offset_mag = vecnorm(ait_tip_offset);
-mag_center_offset_mag = vecnorm(mag_center_offset);
+Rait_tracked_goal = T_trackerait_trackeraitgoal(1:3,1:3);
+Rmag_tracked_goal = T_trackermag_trackermaggoal(1:3,1:3);
 
-R_ait_error = T_ait_tracker_goal(1:3,1:3)*T_ait_tracker(1:3,1:3)';
-R_mag_error = T_mag_tracker_goal(1:3,1:3)*T_mag_tracker(1:3,1:3)';
+ait_ang_err = vectorAngle3d([0,0,1],(Rait_tracked_goal*[0,0,1]')');
+mag_ang_err = vectorAngle3d([0,0,1],(Rmag_tracked_goal*[0,0,1]')');
 
-axang_ait_err = rotm2axang(R_ait_error);
-axang_mag_err = rotm2axang(R_mag_error);
+ait_ang_err_deg = rad2deg(ait_ang_err)
+mag_ang_err_deg = rad2deg(mag_ang_err);
 
-ang_ait_err = rad2deg(axang_ait_err(4));
-ang_mag_err = rad2deg(axang_mag_err(4));
+ait_tip_err = vecnorm(T_trackerait_trackeraitgoal(1:3,4));
+mag_center_err = vecnorm(T_trackermag_trackermaggoal(1:3,4));
 
 magcolor = 'b';
 aitcolor = 'k';
@@ -88,20 +86,20 @@ aitcolor = 'k';
 figure(1);
 subplot(1,2,1); grid on; hold on; title('Angular Offset');
 xlabel('Trial'); ylabel('Angular Offset (axang rep) [deg]');
-scatter(1,ang_ait_err,aitcolor,'filled');
-scatter(1,ang_mag_err,magcolor,'filled');
+scatter(1,ait_ang_err_deg,aitcolor,'filled');
+scatter(1,mag_ang_err_deg,magcolor,'filled');
 
 subplot(1,2,2); grid on; hold on; title('Origin Offset');
 xlabel('Trial'); ylabel('Origin Offset [mm]');
-scatter(1,ait_tip_offset_mag,aitcolor,'filled');
-scatter(1,mag_center_offset_mag,magcolor,'filled');
+scatter(1,ait_tip_err,aitcolor,'filled');
+scatter(1,mag_center_err,magcolor,'filled');
 legend('NMAIT','Omnimag');
 
-save(strcat(pwd,'\errors\ait_tip_offset\',errname,'ait_mag.mat'),'ait_tip_offset_mag');
-save(strcat(pwd,'\errors\R_ait_err\',errname,'ait_R.mat'),'R_ait_error');
+save(strcat(pwd,'\errors\ait_tip_err\',errname,'ait_tip_err.mat'),'ait_tip_err');
+save(strcat(pwd,'\errors\ait_ang_err\',errname,'ait_ang_err_deg.mat'),'ait_ang_err_deg');
 
 if toggleMagSave
-    save(strcat(pwd,'\errors\mag_cent_offset\',errname,'mag_mag.mat'),'mag_center_offset_mag');
-    save(strcat(pwd,'\errors\R_mag_err\',errname,'mag_R.mat'),'R_mag_error');
+    save(strcat(pwd,'\errors\mag_center_err\',errname,'mag_center_err.mat'),'mag_center_err');
+    save(strcat(pwd,'\errors\mag_ang_err\',errname,'mag_ang_err_deg.mat'),'mag_ang_err_deg');
 end
 
