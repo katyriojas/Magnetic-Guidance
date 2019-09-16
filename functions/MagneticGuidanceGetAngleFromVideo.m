@@ -19,7 +19,7 @@ if nargin < 1
 end
 
 if nargin < 2
-    smooth_span = 0.02;
+    smooth_span = 20;
 end
 
 % reference marker colors
