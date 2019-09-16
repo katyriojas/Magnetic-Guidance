@@ -22,7 +22,7 @@
 %   - geom3d = matlab.addons.toolbox.installToolbox('geom3d.mltbx')
 %   - geom2d = matlab.addons.toolbox.installToolbox('geom2d.mltbx')
 
-% clear all; clc; close all;
+clear all; clc; close all;
 load('path.mat');
 
 addpath('stls','functions','omnimag parameters','rig_ppr_medial_path',...
@@ -31,7 +31,6 @@ addpath('stls','functions','omnimag parameters','rig_ppr_medial_path',...
 %% User-Specified Parameters
 
 % Toggles
-export_data = false;
 align_st_with_mag = false;
 useLW = true;
 flip_magnet_polarity = true; %true equal south out the tip
@@ -69,9 +68,6 @@ ramp_end = 22.5; %[mm] (along insertion depth)
 % basal_pts = 15:40; % medial axis points to use when fitting basal plane
 basal_pts = 40:80;
 
-% tip magnet dipole moment
-tip_dipole_moment = 2.4e-5; % [Am^2]
-
 % STL paths
 ait_path = 'AIT_7-17-19.STL';
 mag_path = 'omnimag_7-17-19.STL';
@@ -101,7 +97,8 @@ ppr_filepath = 'rig_ppr_medial_path\tbone4.ppr';
 medial_axis_filepath = 'rig_ppr_medial_path\MedialAxis_Tbone4.txt';
 
 % Fixture file location
-fixture_filepath = 'rig_ppr_medial_path\CochleaFixtureRef_2019-7-17.txt';
+fixture_filepath = strcat('C:\Users\riojaske\Documents\magsteer\',...
+'PreopPlanning\rig_ppr_medial_path\CochleaFixtureRef_2019-7-17.txt');
 
 % Load data from ppr file (uses RPI coordinate frame)
 [target_rpi, entry_rpi, markers_rpi, ~, voxel_size, ct_dims] =...
@@ -294,22 +291,6 @@ currents_scaled(1,:) = current_scaling_x*currents(1,:);
 currents_scaled(2,:) = current_scaling_y*currents(2,:);
 currents_scaled(3,:) = current_scaling_z*currents(3,:);
 
-
-%% Compute tip forces at each trajectory point
-
-grad_step = 0.25/1e3; % [mm->m] step size for computing gradient
-
-tip_forces = zeros(3, length(mag_pnts));
-for ii=2:length(mag_pnts)
-    curr_pos = mag_pnts(:,ii)/1e3; % [m] location in Omnimagnet frame
-    curr_tip_vector = normalizeVector3d((curr_pos - mag_pnts(:,ii-1)/1e3)')';
-    grad_B = [(getField(curr_pos+[grad_step;0;0], currents_scaled(:,ii)) - getField(curr_pos-[grad_step;0;0], currents_scaled(:,ii))) / grad_step,...
-              (getField(curr_pos+[0;grad_step;0], currents_scaled(:,ii)) - getField(curr_pos-[0;grad_step;0], currents_scaled(:,ii))) / grad_step,...
-              (getField(curr_pos+[0;0;grad_step], currents_scaled(:,ii)) - getField(curr_pos-[0;0;grad_step], currents_scaled(:,ii))) / grad_step];
-    tip_forces(:,ii) = grad_B * (tip_dipole_moment*curr_tip_vector); % [N]
-end
-
-
 %% Trim to desired start/end depths
 
 mag_start = find(path_cumulative > start_depth, 1);
@@ -421,7 +402,6 @@ text(path_cumulative(min_z_ind),min_z, strcat(' \leftarrow ',...
     sprintf('%.1f A', min_z)))
 title('Omnimagnet Coil Currents')
 
-
 % 3D, scala tympani frame
 figure(2); clf(2)
 hold on; axis equal; xlabel('x'); ylabel('y'); zlabel('z');
@@ -457,7 +437,6 @@ view([-100 35]);
 % drawPolyline(medial_axis_smoothed(1:2,:)', '--b');
 % drawVector(medial_axis_smoothed(1:2,1:2:end)', mag_vectors_st(1:2,1:2:end)','c');
 
-
 % 3D, Omnimagnet frame
 figure(3); clf(3); grid on;
 hold on; axis equal; xlabel('x'); ylabel('y'); zlabel('z');
@@ -490,23 +469,38 @@ p_light = [150, 1200, 350];
 light('Position', p_light, 'Style', 'local')
 material dull
 
+%% Export plan to .yaml file for ROS
+newFolderName = strcat('preoperative plans/PreopPlan_',...
+    datestr(now,'yyyy-mm-dd_HH-MM'));
+mkdir(newFolderName);
 
-% forces on tip magnet
-% force_scale = 10e3;
-% figure(4); clf(4)
-% hold on; axis equal; xlabel('x'); ylabel('y'); zlabel('z');
-% drawPolyline3d(mag_pnts','b');
-% drawVector3d(mag_pnts(:,1:5:end)', force_scale*tip_forces(:,1:5:end)', 'Color', [0.9 0.7 0.125]);
-% view([-100 35]);
-% 
-% figure(5); clf(5)
-% hold on; xlabel('Insertion Depth (mm)'); ylabel('Tip Force (mN)');
-% plot(path_cumulative(mag_on), 1e3*tip_forces(:,mag_on))
-% legend('Fx','Fy','Fz')
+% Save figures
+savefig(figure(1),strcat(newFolderName,'\Fig1'));
+savefig(figure(2),strcat(newFolderName,'\Fig2'));
+savefig(figure(3),strcat(newFolderName,'\Fig3'));
+savefig(figure(4),strcat(newFolderName,'\Fig4'));
+
+yamlFileID = fopen(strcat(newFolderName,'/trajectory', '.yaml'),'w');
+export_data2ros(1:length(planned_pnts),...
+                insertion_depth,...
+                currents_scaled(:,planned_pnts),yamlFileID);
+            
+%% Export T_fixture_ait.txt => target pose of AIT in cochlea fixture frame
+fileID = fopen(strcat(newFolderName,'/T_ait_fixture','.txt'), 'wt');
+fprintf(fileID, '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(1,:));
+fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(2,:));
+fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(3,:));
+fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(4,:));
+fclose(fileID);
 
 
-
-%% Export data
+%% Export T_fixture_mag.txt => target pose of Omnimagnet in cochlea fixture frame
+fileID = fopen(strcat(newFolderName,'/T_mag_fixture', '.txt'), 'wt');
+fprintf(fileID, '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(1,:));
+fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(2,:));
+fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(3,:));
+fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(4,:));
+fclose(fileID);
 
 if export_data
     % Export plan to .yaml file for ROS
@@ -546,17 +540,3 @@ if export_data
     % Export Matlab workspace
     save(strcat(newFolderName,'/workspace.mat'));
 end
-
-% Commented out - used the code below to generate preop plan figure
-% figure(5); grid on; hold on;
-% % ylim([66 86]); xlim([8 27]);
-% xlabel('Insertion Depth (mm)');
-% ylabel('Bmag (mT)');
-% plot(insertion_depth,Bmag_ramp(planned_pnts)*1000,'k','LineWidth',1);
-% figure();
-% grid on; hold on;
-% plot(insertion_depth,currents_scaled(1,planned_pnts),...
-%      insertion_depth,currents_scaled(2,planned_pnts),...
-%      insertion_depth,currents_scaled(3,planned_pnts));
-% xlabel('Insertion Depth (mm)'); ylabel('Currents (A)');
-% legend('Ix','Iy','Iz');
