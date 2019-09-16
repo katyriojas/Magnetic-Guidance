@@ -6,9 +6,6 @@ clear all; clc;
 %% INPUTS
 addpath('classDef','functions','data');
 load('avg_cal_slopes.mat');
-load('data\phantom\phantom_T_st_fixture.mat');
-T_fixture_st = inv(T_st_fixture);
-smooth_span = 0.06; % specify smooth span
 
 % Filepaths to CSVs exported from ROS bags
 base_path = 'data\phantom\';
