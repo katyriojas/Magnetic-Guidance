@@ -63,6 +63,7 @@ while hasFrame(vid)
     frame_count = frame_count + 1;
     percDone = 100*frame_count/num_frames;
     fprintf('%2.1f perc\n',percDone)
+    
     % segment tip marker
     [tipX,tipY] = ginput(1);
     tipPnt = [tipX;tipY];
