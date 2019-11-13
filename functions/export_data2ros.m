@@ -1,8 +1,8 @@
-function export_data2ros(planned_pnts,insertion_depth,currents,fileID)
+function export_data2ros(insertion_depth, coil_currents, fileID)
 
-    Ix = currents(1,:);
-    Iy = currents(2,:);
-    Iz = currents(3,:);
+    Ix = coil_currents(1,:);
+    Iy = coil_currents(2,:);
+    Iz = coil_currents(3,:);
   
     fprintf(fileID,'omnimagnet:\n');
     fprintf(fileID,'    trajectory:\n');

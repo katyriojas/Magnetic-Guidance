@@ -1,114 +1,125 @@
 %% Creates Magnetic Guidance Plan
 % 
 % Trevor Bruns & Katy Riojas
-% June/July 2019
+% June-September 2019
 %
-% ----------
-% --INPUTS--
-% ----------
+% 
+% -----------
+% -- NOTES --
+% -----------
+% - requires geom3d, geom2d, robotics, and aerospace toolboxes
+%   - geom3d = matlab.addons.toolbox.installToolbox('geom3d.mltbx')
+%   - geom2d = matlab.addons.toolbox.installToolbox('geom2d.mltbx')
+% - requires 'Border-less tight subplot' from File Exchange
+%   - https://www.mathworks.com/matlabcentral/fileexchange/68326-border-less-tight-subplot-auto-refresh
+% - verify all toggles/flags are correct
+% - check file paths
+% - check that basal_pts make sense for the medial_axis file used
+%
+%
+% ------------
+% -- INPUTS --
+% ------------
 % ST medial axis  => .txt file of points along medial axis (from IMPROVISE)
 % insertion trajectory => .ppr file from CIP with target/entry/marker pts
 % cochlea fixture tool definition => .txt NDI tool definition file
 % 
-% -----------
-% --OUTPUTS--
-% -----------
+% -------------
+% -- OUTPUTS --
+% -------------
 % T_ait_fixture.txt => target pose of AIT in cochlea fixture frame
-% T_mag_fixture.txt => target pose of Omnimagnet in cochlea fixture frame
+% T.mag_fixture.txt => target pose of Omnimagnet in cochlea fixture frame
 % magnetic_guidance_plan.yaml => coil currents and insertion depths
 %
-% Notes:
-% - requires geom3d, geom2d, robotics, and aerospace toolboxes
-%   - geom3d = matlab.addons.toolbox.installToolbox('geom3d.mltbx')
-%   - geom2d = matlab.addons.toolbox.installToolbox('geom2d.mltbx')
 
-clear all; clc; close all;
-load('path.mat');
 
-addpath('stls','functions','omnimag parameters','rig_ppr_medial_path',...
-    'preoperative plans');
+% clear all; clc; close all;
+addpath('stls','functions','omnimag parameters','rig_ppr_medial_path', 'preoperative plans');
+
 
 %% User-Specified Parameters
 
 % Toggles
-align_st_with_mag = false;
-useLW = true;
-flip_magnet_polarity = true; %true equal south out the tip
-ramp_field = true;
+params.align_st_with_mag = false;   % true => align y-axes of ST & magnet; false => keep fixture parallel to magnet
+params.useLW = true;                % true => use lateral wall path for generating field vectors
+params.flip_magnet_polarity = true; % true => south out the tip
+params.ramp_field = true;           % true => use ramp function for magnetic field magnitudes
+params.export_data = true;         % true => create new folder and export generated data
 
-% Left or Right Ear
-% side = 'R';
-side = 'L';
 
-if side == 'L'
+params.ppr_filename = 'tbone4.ppr'; % PPR file location
+% params.ppr_filename = 'phantom1_preopPlan.ppr'; % PPR file location
+
+
+params.medial_axis_filename = 'MedialAxis_Tbone4.txt'; % Medial axis file location
+% params.medial_axis_filename = 'phantom1_medial_axis_ct.txt'; % Medial axis file location
+
+params.basal_pts = 40:80; % medial axis points to use when fitting basal plane
+
+
+params.side = 'L'; % Left or Right Ear
+
+load('path.mat'); % loads 'path' -> lateral wall path
+if strcmp(params.side,'L')
     path(3,:) = -path(3,:);
 end
 
 % Specify medial_axis interpolation step size and start/end depths
-interp_step = 0.04; % [mm]
-start_depth = 8; % [mm]
-end_depth = 27; %[mm]
+params.interp_step = 0.04; % [mm]
+params.start_depth = 8; % [mm]
+params.end_depth = 27; %[mm]
 
-insertion_speed = 1.25; %[mm/s]
-% [mm] distance between center of the ST and Omnimagnet's surface
-st_offset_from_mag_surface = 16; 
 
-% position [mm] of scala tympani (center) in the Omnimagnet's coordinate frame
+params.insertion_speed = 1.25; % [mm/s] linear insertion speed
+
+params.st_offset_from_mag_surface = 16; % [mm] distance between ST center and Omnimagnet's surface
+
+
+% Position [mm] of scala tympani (center) in the Omnimagnet's coordinate frame
 % 84 is hardcoded in here for half of the width of the Omnimagnet
-t_mag_st = [0; 84 + st_offset_from_mag_surface; 0];
+params.t_mag_st = [0; 84 + params.st_offset_from_mag_surface; 0];
         
-% Desired magnitude of magnetic field (this assumes constant along trajectory)
-Bmag = 78*10^-3; % [T] (experimentally: 104mT yields ~75mT)
-scale1 = 5/(Bmag*1000); % assuming plus or minus 5 mT
-Bmag_start = 70*10^-3; %[mT]
-Bmag_end = 85*10^-3; % [mT]
-ramp_start = 16; % [mm] (along insertion depth)
-ramp_end = 22.5; %[mm] (along insertion depth)
-% Select which points to use for fitting the basal plane
-% basal_pts = 15:40; % medial axis points to use when fitting basal plane
-basal_pts = 40:80;
+
+% Desired magnetic field strength parameters    
+params.Bmag_const = 78e-3; % [T]  (used if params.ramp_field = false)
+
+params.Bmag_start = 70e-3; % [T] (used if params.ramp_field = true)
+params.ramp_start = 16;    % [mm] (along insertion depth)
+params.Bmag_end   = 85e-3; % [T]
+params.ramp_end   = 22.5;  % [mm] (along insertion depth)
+
 
 % STL paths
-ait_path = 'AIT_7-17-19.STL';
-mag_path = 'omnimag_7-17-19.STL';
-fixture_path = 'cochlea_fixturev4.STL';
+params.ait_stl_filename     = 'AIT_7-17-19.STL';
+params.mag_stl_filename     = 'omnimag_7-17-19.STL';
+params.fixture_stl_filename = 'cochlea_fixturev4.STL';
 
-current_scaling_x = 1.31;
-current_scaling_y = 1.74*1.06;
-current_scaling_z = 1.38*1.082;
+% Fixture rigid body file location
+params.fixture_filename = 'CochleaFixtureRef_2019-7-17.txt';
+
+% Experimentally measured amounts to scale coil currents (NOTE: location dependent!!)
+params.current_scaling.x = 1.31;
+params.current_scaling.y = 1.84;
+params.current_scaling.z = 1.49;
+
 
 %% Load STLs
 
-ait_stl = stlRead(ait_path);
-mag_stl = stlRead(mag_path);
-fixture_stl = stlRead(fixture_path);
+stl.ait = stlRead(params.ait_stl_filename);
+stl.omnimag = stlRead(params.mag_stl_filename);
+stl.fixture = stlRead(params.fixture_stl_filename);
 
 
 %% Load insertion trajectory (.ppr), scala tympani medial axis (.txt), and cochlea fixture tool definition file (.txt)
 
-% Specify file locations
-
-% PPR file location
-% ppr_filepath = 'rig_ppr_medial_path\phantom1_preopPlan.ppr';
-ppr_filepath = 'rig_ppr_medial_path\tbone4.ppr';
-
-% Medial axis file location
-% medial_axis_filepath = 'rig_ppr_medial_path\phantom1_medial_axis_ct.txt';
-medial_axis_filepath = 'rig_ppr_medial_path\MedialAxis_Tbone4.txt';
-
-% Fixture file location
-fixture_filepath = strcat('C:\Users\riojaske\Documents\magsteer\',...
-'PreopPlanning\rig_ppr_medial_path\CochleaFixtureRef_2019-7-17.txt');
-
 % Load data from ppr file (uses RPI coordinate frame)
-[target_rpi, entry_rpi, markers_rpi, ~, voxel_size, ct_dims] =...
-    Read_PPR_File(ppr_filepath);
+[ppr.target_rpi, ppr.entry_rpi, ppr.markers_rpi, ~, ppr.voxel_size, ppr.ct_dims] = Read_PPR_File(params.ppr_filename);
 
 % Load medial axis points
-medial_axis_lpi = LoadMedialAxis(side, medial_axis_filepath);
+medial_axis.lpi = LoadMedialAxis(params.side, params.medial_axis_filename);
               
 % Load fiducial marker locations from cochlea fixture tool definition
-markers_fixture = LoadFiducialMarkerLocations(fixture_filepath);
+markers.fixture = LoadFiducialMarkerLocations(params.fixture_filename);
 
 
 %% Transform CT data to LPS coordinate frame
@@ -118,44 +129,39 @@ current_frame = 'RPI';
 desired_frame = 'LPS';
 
 % First convert markers to LPS
-num_markers = size(markers_rpi,2);
-markers_lps = zeros(3,num_markers);
+num_markers = size(ppr.markers_rpi,2);
+markers.lps = zeros(3,num_markers);
 
 for ii = 1:num_markers
     
-    markers_lps(:,ii) = ...
-        transform_between_coordinate_systems_Matlab(markers_rpi(1:3,ii),...
-        ct_dims, voxel_size, current_frame, desired_frame);
+    markers.lps(:,ii) = ...
+        transform_between_coordinate_systems_Matlab(ppr.markers_rpi(1:3,ii), ppr.ct_dims, ppr.voxel_size, current_frame, desired_frame);
     
 end
 
 % Now convert the target and entry points to LPS
-target_lps = transform_between_coordinate_systems_Matlab(target_rpi,...
-    ct_dims, voxel_size, current_frame, desired_frame);
-entry_lps = transform_between_coordinate_systems_Matlab(entry_rpi,...
-    ct_dims, voxel_size, current_frame, desired_frame);
+target_lps = transform_between_coordinate_systems_Matlab(ppr.target_rpi, ppr.ct_dims, ppr.voxel_size, current_frame, desired_frame);
+entry_lps  = transform_between_coordinate_systems_Matlab(ppr.entry_rpi,  ppr.ct_dims, ppr.voxel_size, current_frame, desired_frame);
 target_vector_lps = normalizeVector3d(target_lps' - entry_lps')';
 
 % Convert Medial Axis Points from LPI (Image Voxels) to LPS
-medial_axis_lpi_mm = bsxfun(@times, medial_axis_lpi, voxel_size); % voxels to mm
-medial_axis_lps_mm = zeros(size(medial_axis_lpi)); % initialize LPS medial axis
+medial_axis.lpi_mm = bsxfun(@times, medial_axis.lpi, ppr.voxel_size); % voxels to mm
+medial_axis.lps_mm = zeros(size(medial_axis.lpi)); % initialize LPS medial axis
 
 % Compute medial axis points in LPS in mm
-for ii = 1:length(medial_axis_lpi)
+for ii = 1:length(medial_axis.lpi)
     
-    medial_axis_lps_mm(1:3,ii) =...
-        transform_between_coordinate_systems_Matlab(medial_axis_lpi_mm(1:3,ii),...
-        ct_dims, voxel_size, 'LPI', 'LPS');
+    medial_axis.lps_mm(1:3,ii) = ...
+        transform_between_coordinate_systems_Matlab(medial_axis.lpi_mm(1:3,ii), ppr.ct_dims, ppr.voxel_size, 'LPI', 'LPS');
     
 end
 
 
-%% Compute registration from ct frame to cochlea fixture frame => T_fixture_lps
+%% Compute registration from ct frame to cochlea fixture frame => T.fixture_lps
 
 % Markers from fixture frame come from NDI rig body txt file and
-% markers_lps comes from CT space
-[T_fixture_lps, FRE] = ...
-    point_register_without_correspondence(markers_lps, markers_fixture);
+% markers.lps comes from CT space
+[T.fixture_lps, FRE] =  point_register_without_correspondence(markers.lps, markers.fixture);
 
 if FRE > 1.0
     warning('FRE is large (%.2f mm). Did you select the correct files?',FRE)
@@ -163,59 +169,61 @@ end
 
 
 %% Align medial axis to standard scala tympani coordinate frame
-[medial_axis_st, T_st_lps] = alignMedialAxis(medial_axis_lps_mm,...
-    side,basal_pts, target_vector_lps);
+[medial_axis.st, T.st_lps] = alignMedialAxis(medial_axis.lps_mm, params.side, params.basal_pts, target_vector_lps);
 
-% Also compute T_fixture_st (needed later)
-T_fixture_st = T_fixture_lps * inv(T_st_lps);
-T_st_fixture = inv(T_fixture_st);
+% Also compute T.fixture_st (needed later)
+T.fixture_st = T.fixture_lps * inv(T.st_lps);
+% T.st_fixture = inv(T.fixture_st);
+
 
 %% Interpolate and smooth medial axis to add points and ensure they are evenly spaced
-smooth_span = 0.1;
-medial_axis_smoothed = interp_and_smooth(medial_axis_st,interp_step,smooth_span);
-lateral_wall_smoothed = interp_and_smooth(path,interp_step,smooth_span);
+params.smooth_span = 0.1;
+medial_axis.st_smoothed = interp_and_smooth(medial_axis.st, params.interp_step, params.smooth_span);
+lateral_wall.smoothed = interp_and_smooth(path, params.interp_step, params.smooth_span);
 
-if ~useLW
-    path_diff = sqrt(sum(diff(medial_axis_smoothed')'.^2, 1));
+if params.useLW
+    path_diff = sqrt(sum(diff(lateral_wall.smoothed')'.^2, 1));
 else
-    path_diff = sqrt(sum(diff(lateral_wall_smoothed')'.^2,1));
+    path_diff = sqrt(sum(diff(medial_axis.st_smoothed')'.^2, 1));
 end
 
-path_cumulative = [0, cumsum(path_diff)]; % cumulative length along path
-path_length_mm = path_cumulative(end); % total path length
+insertion_depth = [0, cumsum(path_diff)]; % cumulative length along path
+path_length_mm = insertion_depth(end); % total path length
 
-if ramp_field
-    
-    ramp_start_index = find(path_cumulative>=ramp_start,1);
-    ramp_end_index = find(path_cumulative>=ramp_end,1);
-    Bmag_ramp = linspace(Bmag_start,Bmag_start,length(path_cumulative));
+if params.ramp_field
+    ramp_start_index = find(insertion_depth>=params.ramp_start,1);
+    ramp_end_index = find(insertion_depth>=params.ramp_end,1);
+    Bmag_ramp = params.Bmag_start * ones(size(insertion_depth));
     Bmag_ramp(ramp_start_index:ramp_end_index) = ...
-        linspace(Bmag_start,Bmag_end,length(ramp_start_index:ramp_end_index));
-    Bmag_ramp(ramp_end_index:end) = Bmag_end;
-    
+        linspace(params.Bmag_start, params.Bmag_end, length(ramp_start_index:ramp_end_index));
+    Bmag_ramp(ramp_end_index:end) = params.Bmag_end;
 end
+
 
 %% Compute magnetic field vectors in cochlea frame
 
-% compute alpha => angle of normal vector w.r.t. x-axis
-% Note: ignoring z-component since vector should lie mostly in XY plane
-medial_axis_gradient = gradient(medial_axis_smoothed);
-lateral_wall_gradient = gradient(lateral_wall_smoothed);
-alpha = bsxfun(@atan2d, medial_axis_gradient(2,:),...
-            medial_axis_gradient(1,:)) - 90;
-alpha2 = bsxfun(@atan2d, lateral_wall_gradient(2,:),...
-            lateral_wall_gradient(1,:)) - 90;
+if params.useLW
+    % compute alpha => angle of normal vector w.r.t. x-axis
+    % Note: ignoring z-component since vector should lie mostly in XY plane
+    lateral_wall.gradient = gradient(lateral_wall.smoothed);
+    alpha = bsxfun( @atan2d, lateral_wall.gradient(2,:), lateral_wall.gradient(1,:) ) - 90;
 
-% normal vectors at each point (negative since they point inward)
-if useLW~=1
-    mag_vectors_st = [-cosd(alpha); -sind(alpha); zeros(size(alpha))];
+    % normal vectors at each point (negative since they point inward)
+    mag.vectors_st = [-cosd(alpha); -sind(alpha); zeros(size(alpha))];
 else
-    mag_vectors_st = [-cosd(alpha2); -sind(alpha2); zeros(size(alpha2))];
+    % compute alpha => angle of normal vector w.r.t. x-axis
+    % Note: ignoring z-component since vector should lie mostly in XY plane
+    medial_axis.st_smoothed_gradient = gradient(medial_axis.st_smoothed);
+    alpha = bsxfun( @atan2d, medial_axis.st_smoothed_gradient(2,:), medial_axis.st_smoothed_gradient(1,:) ) - 90;
+    
+    % normal vectors at each point (negative since they point inward)
+    mag.vectors_st = [-cosd(alpha); -sind(alpha); zeros(size(alpha))];
 end
 
-if flip_magnet_polarity
-   mag_vectors_st = -mag_vectors_st; 
+if params.flip_magnet_polarity
+   mag.vectors_st = -mag.vectors_st; 
 end
+
 
 %% Transform magnetic field vectors into Omnimagnet coordinate frame
 % Need both the vector origins (i.e. medial axis points) and vectors in 
@@ -225,90 +233,74 @@ end
 % surface, so we can only rotate about zhat_fixture in order to best 
 % align yhat_st with yhat_mag
 
- a = projPointOnPlane((T_fixture_st(1:3,1:3)*[0;1;0])',...
-     createPlane([0 0 0], [0 0 1]))';
+a = projPointOnPlane((T.fixture_st(1:3,1:3)*[0;1;0])', createPlane([0 0 0], [0 0 1]))';
 
 % assume y axis of of fixture is initially aligned with mag before rotation
 b = [0;1;0]; 
 
-if align_st_with_mag
-    
+if params.align_st_with_mag
     R_theta_z = createRotationVector3d(a', [0,1,0]); % compute angular offset
-    
 else
-    
     R_theta_z = eye(4);
-    
 end
 
 % Rotation about Z-axis that aligns ST Y-axis with the fixture Y-axis
 
-t_theta_z = R_theta_z*T_fixture_st;
+t_theta_z = R_theta_z*T.fixture_st;
 t_theta_z = t_theta_z(1:3,4);
 
-T_mag_fixture = R_theta_z;
-T_mag_fixture(1:3,4) =  t_mag_st - t_theta_z;
+T.mag_fixture = R_theta_z;
+T.mag_fixture(1:3,4) =  params.t_mag_st - t_theta_z;
 
-% T_mag_st => transformation from scala tympani frame to Omnimagnet frame
-T_mag_st = T_mag_fixture * T_fixture_st;
+% T.mag_st => transformation from scala tympani frame to Omnimagnet frame
+T.mag_st = T.mag_fixture * T.fixture_st;
 
 % Transform the magnetic field vectors into Omnimagnet frame
-mag_vectors_mag = T_mag_st(1:3,1:3) * mag_vectors_st; % can just rotate the field vectors
-medial_axis_mag = transformPoint3d(medial_axis_smoothed', T_mag_st)';
+mag.vectors_mag = T.mag_st(1:3,1:3) * mag.vectors_st; % can just rotate the field vectors
+medial_axis.mag = transformPoint3d(medial_axis.st_smoothed', T.mag_st)';
+lateral_wall.mag = transformPoint3d(lateral_wall.smoothed',T.mag_st)';
 
-% Compute for Lateral Wall array
-lateral_wall_mag = transformPoint3d(lateral_wall_smoothed',T_mag_st)';
-
-%% Compute omnimagnet coil currents
-
-initialize_omnimag_vars;
-
-if useLW 
-    endcurrents = length(lateral_wall_mag);
-    mag_pnts = lateral_wall_mag;
-    currents = zeros(size(lateral_wall_mag));
+if params.useLW
+    mag.pnts = lateral_wall.mag;
 else
-    endcurrents = length(medial_axis_mag);
-    mag_pnts = medial_axis_mag;
-    currents = zeros(size(medial_axis_mag));
+    mag.pnts = medial_axis.mag;
 end
 
-for ii = 1:endcurrents
-    
-    if ~ramp_field
-        currents(:,ii) = getCurrents(mag_pnts(:,ii)/1000,...
-        mag_vectors_mag(:,ii)*Bmag);
-    else
-        currents(:,ii) = getCurrents(mag_pnts(:,ii)/1000,...
-        mag_vectors_mag(:,ii)*Bmag_ramp(ii));
-    end
-    
+%% Compute Omnimagnet coil currents
+
+% Find indices where magnet is on/off
+mag.i_start = find(insertion_depth > params.start_depth, 1);
+mag.i_end   = find(insertion_depth > params.end_depth,   1);
+mag.on = mag.i_start:mag.i_end;
+mag.off = 1:length(insertion_depth);
+mag.off(mag.on) = [];
+
+% Desired field magnitude as function of insertion depth
+Bmag = params.ramp_field*Bmag_ramp + (~params.ramp_field)*ones(size(insertion_depth))*params.Bmag_const;
+Bmag(mag.off) = 0;
+
+% compute coil currents
+initialize_omnimag_vars;
+currents.ideal = zeros(size(mag.vectors_mag));
+for ii = 1:length(insertion_depth)
+    currents.ideal(:,ii) = getCurrents(mag.pnts(:,ii)/1000, mag.vectors_mag(:,ii)*Bmag(ii));
 end
 
-currents_scaled = zeros(size(currents));
-% Scale the currents if necessary
-currents_scaled(1,:) = current_scaling_x*currents(1,:);
-currents_scaled(2,:) = current_scaling_y*currents(2,:);
-currents_scaled(3,:) = current_scaling_z*currents(3,:);
-
-%% Trim to desired start/end depths
-
-mag_start = find(path_cumulative > start_depth, 1);
-mag_end   = find(path_cumulative > end_depth,   1);
-
-planned_pnts = mag_start:mag_end;
-spacing = (end_depth - start_depth)/(length(planned_pnts)-1);
-insertion_depth = start_depth:spacing:end_depth;
+% Scale currents using experimentally determined scale factors
+currents.scaled = zeros(size(currents.ideal));
+currents.scaled(1,:) = params.current_scaling.x * currents.ideal(1,:);
+currents.scaled(2,:) = params.current_scaling.y * currents.ideal(2,:);
+currents.scaled(3,:) = params.current_scaling.z * currents.ideal(3,:);
 
 
 %% Find transform for AIT target pose in fixture coordinate frame
-% T_fixture_ait = T_fixture_lps * (T_st_lps)^-1 * T_st_ait
-%                    ?have          ?have           ?need
+% T.fixture_ait = T.fixture_lps * (T.st_lps)^-1 * T.st_ait
+%                    ^have          ^have           ^need
 
 % First determine R_st_ait => rotation of the AIT target pose in the 
 % scala tympani frame to do this we will find the basis vectors (axes)
 % of the AIT frame in ST coordinates Z-axis (axis of insertion)
-target_vector_st = T_st_lps(1:3,1:3)*target_vector_lps;
+target_vector_st = T.st_lps(1:3,1:3)*target_vector_lps;
 
 % Z axis of the AIT target pose in ST frame; AIT inserts along -Z axis
 z_axis_st_ait = -target_vector_st; 
@@ -324,143 +316,170 @@ x_axis_st_ait = cross(y_axis_st_ait, z_axis_st_ait); % orthogonal to y & z axes
 % R_st_ait
 R_st_ait = [x_axis_st_ait, y_axis_st_ait, z_axis_st_ait];
 
-% Now we just need the translation component before assembling T_st_ait
+% Now we just need the translation component before assembling T.st_ait
 % Assume AIT frame origin is the first trajectory/medial axis point
-t_st_ait = medial_axis_smoothed(:,1); 
-T_st_ait = [R_st_ait, t_st_ait; [0,0,0,1]];
+t_st_ait = medial_axis.st_smoothed(:,1); 
+T.st_ait = [R_st_ait, t_st_ait; [0,0,0,1]];
 
-% Compute T_fixture_ait
-T_fixture_ait = T_fixture_lps * inv(T_st_lps) * T_st_ait;
-T_ait_fixture = inv(T_fixture_ait);
+% Compute T.fixture_ait
+T.fixture_ait = T.fixture_lps * inv(T.st_lps) * T.st_ait;
+T.ait_fixture = inv(T.fixture_ait);
+
 
 %% Compute transform for cochlea fixture frame in Omnimagnet frame
 
-T_fixture_mag = T_fixture_lps * inv(T_st_lps) * inv(T_mag_st);
+T.fixture_mag = T.fixture_lps * inv(T.st_lps) * inv(T.mag_st);
 
 
 %% Transform STLs into Omnimagnet frame
 
 % AIT
-T_mag_ait = inv(T_fixture_mag) * T_fixture_ait;
-ait_stl_magframe = ait_stl;
-ait_stl_magframe.vertices = transformPoint3d(ait_stl.vertices, T_mag_ait);
+T.mag_ait = inv(T.fixture_mag) * T.fixture_ait;
+stl.ait_magframe = stl.ait;
+stl.ait_magframe.vertices = transformPoint3d(stl.ait.vertices, T.mag_ait);
 
 % Cochlea fixture
-fixture_stl_magframe = fixture_stl;
-fixture_stl_magframe.vertices = transformPoint3d(fixture_stl_magframe.vertices, inv(T_fixture_mag));
+stl.fixture_magframe = stl.fixture;
+stl.fixture_magframe.vertices = transformPoint3d(stl.fixture_magframe.vertices, inv(T.fixture_mag));
 
 
 %% Estimate coil temperatures
 start_temps = [25;25;25];
-time_step = interp_step/insertion_speed; % [s] time between each point
-coil_temps = omnimagnetCoilTempEstimate(currents_scaled(:,planned_pnts), time_step, start_temps);
+time_step = params.interp_step/params.insertion_speed; % [s] time between each point
+coil_temps = omnimagnetCoilTempEstimate(currents.scaled(:,mag.on), time_step, start_temps);
 
-% plot
+
+%% Plot
+
+if exist('h_fig','var')
+    if isvalid(h_fig)
+        close(h_fig)
+    end
+end
+
+h_fig = figure;
+h_fig.WindowState = "maximized";
+
+%%%
+% Desired Bmag
+h_ax(1) = subplot_er(3,2,1);
+grid on;
+plot(insertion_depth, Bmag*1e3, 'Color','k', 'LineWidth',1.5)
+ylim([0,100])
+xlabel('Distance Along Cochlea Path (mm)');
+ylabel('||B|| [mT]');
+title('Desired Magnetic Field', 'FontSize',13)
+
+
+%%%
+% Omnimagnet coil currents
+h_ax(2) = subplot_er(3,2,3);
+grid on; hold on;
+
+plot(insertion_depth, currents.scaled(1,:), 'LineWidth',1.5)
+plot(insertion_depth, currents.scaled(2,:), 'LineWidth',1.5)
+plot(insertion_depth, currents.scaled(3,:), 'LineWidth',1.5)
+
+% Add vertical lines for start/end depths
+line([insertion_depth(mag.i_start) insertion_depth(mag.i_start)], get(h_ax(2),'YLim'),'Color','green', 'LineStyle','--', 'LineWidth',1.5)
+line([insertion_depth(mag.i_end)   insertion_depth(mag.i_end)],   get(h_ax(2),'YLim'),'Color','red',   'LineStyle','--', 'LineWidth',1.5)
+
+legend('Ix','Iy','Iz', 'Location','sw'); 
+xlim([0 ceil(path_length_mm)]);
+xlabel('Distance Along Cochlea Path (mm)');
+ylabel('Current (A)');
+[I.max_z, I.max_z_ind] = max(currents.scaled(3,mag.on));
+[I.min_z, I.min_z_ind] = min(currents.scaled(3,mag.on));
+[I.max_y, I.max_y_ind] = max(currents.scaled(2,mag.on));
+[I.min_y, I.min_y_ind] = min(currents.scaled(2,mag.on));
+[I.max_x, I.max_x_ind] = max(currents.scaled(1,mag.on));
+[I.min_X, I.min_X_ind] = min(currents.scaled(1,mag.on));
+text(insertion_depth(I.max_z_ind+mag.i_start),I.max_z, strcat('\leftarrow ', sprintf('%.1f A', I.max_z)))
+text(insertion_depth(I.min_z_ind+mag.i_start),I.min_z, strcat('\leftarrow ', sprintf('%.1f A', I.min_z)))
+text(insertion_depth(I.max_y_ind+mag.i_start),I.max_y, strcat('\leftarrow ', sprintf('%.1f A', I.max_y)))
+text(insertion_depth(I.min_y_ind+mag.i_start),I.min_y, strcat('\leftarrow ', sprintf('%.1f A', I.min_y)))
+text(insertion_depth(I.max_x_ind+mag.i_start),I.max_x, strcat('\leftarrow ', sprintf('%.1f A', I.max_x)))
+text(insertion_depth(I.min_X_ind+mag.i_start),I.min_X, strcat('\leftarrow ', sprintf('%.1f A', I.min_X)))
+title('Omnimagnet Coil Currents', 'FontSize',13)
+
+
+%%%
 % Omnimagnet coil temperatures
-figure(4); clf(4)
-grid on; hold on; axis equal; xlabel('x'); ylabel('y');
-plot(path_cumulative(mag_start:mag_end), coil_temps(1,:),...
-     path_cumulative(mag_start:mag_end), coil_temps(2,:),...
-     path_cumulative(mag_start:mag_end), coil_temps(3,:));
+h_ax(3) = subplot_er(3,2,5);
+grid on; hold on;
+plot(insertion_depth(mag.on), coil_temps(1,:), 'LineWidth',1.5)
+plot(insertion_depth(mag.on), coil_temps(2,:), 'LineWidth',1.5)
+plot(insertion_depth(mag.on), coil_temps(3,:), 'LineWidth',1.5);
 ylim([min(coil_temps(:))-2, max(coil_temps(:))+2]);
 
 for ii = 1:3
     [max_temp, max_ind] = max(coil_temps(ii,:));
-    text(path_cumulative(max_ind + mag_start), max_temp, strcat(' \leftarrow ', sprintf(['%.1f' char(176) 'C'], max_temp)))
+    text(insertion_depth(max_ind + mag.i_start), max_temp, strcat(' \leftarrow ', sprintf(['%.1f' char(176) 'C'], max_temp)))
 end
-
-legend('Coil_x','Coil_y','Coil_z'); 
-xlabel('Distance Along Cochlea Path (mm)');
-ylabel('Temperature (C)');
-title('Omnimagnet Coil Temperatures')
-
-%% Plot
-
-% Omnimagnet coil currents
-figure(1); clf(1); 
-hax=axes;
-grid on; hold on;
-plot(path_cumulative,currents_scaled(1,:),...
-     path_cumulative,currents_scaled(2,:),...
-     path_cumulative,currents_scaled(3,:));
 
 % Add vertical lines for start/end depths
-line([path_cumulative(mag_start) path_cumulative(mag_start)],...
-    get(hax,'YLim'),'Color','green','LineStyle','--','LineWidth',1.5)
-line([path_cumulative(mag_end) path_cumulative(mag_end)],...
-    get(hax,'YLim'),'Color','red','LineStyle','--','LineWidth',1.5)
+line([insertion_depth(mag.i_start) insertion_depth(mag.i_start)], get(h_ax(3),'YLim'),'Color','green', 'LineStyle','--', 'LineWidth',1.5)
+line([insertion_depth(mag.i_end)   insertion_depth(mag.i_end)],   get(h_ax(3),'YLim'),'Color','red',   'LineStyle','--', 'LineWidth',1.5)
 
-legend('Ix','Iy','Iz','start point','end point'); 
-xlim([0 ceil(path_length_mm)]);
+legend('T_x','T_y','T_z', 'Location','nw'); 
 xlabel('Distance Along Cochlea Path (mm)');
-ylabel('Current (A)');
-[max_z, max_z_ind] = max(currents_scaled(3,:));
-[min_z, min_z_ind] = min(currents_scaled(3,:));
-text(path_cumulative(max_z_ind),max_z, strcat(' \leftarrow ',...
-    sprintf('%.1f A', max_z)))
-text(path_cumulative(min_z_ind),min_z, strcat(' \leftarrow ',...
-    sprintf('%.1f A', min_z)))
-title('Omnimagnet Coil Currents')
+ylabel(['Temperature (' char(176) 'C)']);
+title('Omnimagnet Coil Temperatures', 'FontSize',13)
 
+linkaxes(h_ax, 'x');
+
+
+%%%
 % 3D, scala tympani frame
-figure(2); clf(2)
+subplot_er(3,2,2);
 hold on; axis equal; xlabel('x'); ylabel('y'); zlabel('z');
-drawPolyline3d(medial_axis_st','--r');
-drawPolyline3d(medial_axis_smoothed', 'b');
+drawPolyline3d(medial_axis.st','--r');
+drawPolyline3d(medial_axis.st_smoothed', 'b');
 drawPolyline3d(path','--g');
-drawPolyline3d(lateral_wall_smoothed', 'k');
-mag_on = mag_start:mag_end;
-if ~useLW
-    mag_off = 1:length(medial_axis_smoothed);
-else
-    mag_off = 1:length(medial_axis_smoothed);
-end
+drawPolyline3d(lateral_wall.smoothed', 'k');
 
-mag_off(mag_on) = [];
 
-if ~useLW
-    drawFieldVectors(medial_axis_smoothed,mag_vectors_st,mag_off,mag_on)
+if params.useLW
+    drawFieldVectors(lateral_wall.smoothed,mag.vectors_st,mag.off,mag.on)
 else
-    drawFieldVectors(lateral_wall_smoothed,mag_vectors_st,mag_off,mag_on)
+    drawFieldVectors(medial_axis.st_smoothed,mag.vectors_st,mag.off,mag.on)
 end
     
 drawAxis3d(0.5, 0.025);
-drawAxis3dOffset(T_st_ait, 0.5, 0.025);
+drawAxis3dOffset(T.st_ait, 0.5, 0.025);
 drawPlane3d([0,0,0, 1,0,0, 0,1,0], 'FaceColor', 'm', 'FaceAlpha', 0.1)
 drawVector3d(t_st_ait', target_vector_st', 'LineWidth', 2.5, 'Color', 'm');
-view([-100 35]);
+view(2)
+
 
 % % 2D, scala tympani frame
 % figure(5); clf(5)
 % hold on; axis equal; xlabel('x'); ylabel('y'); zlabel('z');
-% drawPolyline(medial_axis_st(1:2,:)', 'k');
-% drawPolyline(medial_axis_smoothed(1:2,:)', '--b');
-% drawVector(medial_axis_smoothed(1:2,1:2:end)', mag_vectors_st(1:2,1:2:end)','c');
+% drawPolyline(medial_axis.st(1:2,:)', 'k');
+% drawPolyline(medial_axis.st_smoothed(1:2,:)', '--b');
+% drawVector(medial_axis.st_smoothed(1:2,1:2:end)', mag.vectors_st(1:2,1:2:end)','c');
+
 
 % 3D, Omnimagnet frame
-figure(3); clf(3); grid on;
+subplot_er(3,2,[4,6]);
 hold on; axis equal; xlabel('x'); ylabel('y'); zlabel('z');
 
-drawPoint3d(lateral_wall_mag','b');
-drawPolyline3d(medial_axis_mag','k');
+drawPoint3d(lateral_wall.mag','b');
+drawPolyline3d(medial_axis.mag','k');
 
-if ~useLW
-    drawVector3d(medial_axis_mag(:,1:5:end)', mag_vectors_mag(:,1:5:end)','k');
+if ~params.useLW
+    drawVector3d(medial_axis.mag(:,1:5:end)',  mag.vectors_mag(:,1:5:end)','k');
 else
-    drawVector3d(lateral_wall_mag(:,1:5:end)', mag_vectors_mag(:,1:5:end)','k');
+    drawVector3d(lateral_wall.mag(:,1:5:end)', mag.vectors_mag(:,1:5:end)','k');
 end
-drawAxis3dOffset(T_mag_st, 10, 0.4);
-drawCuboid([0,0,0, 178, 168, 172], 'FaceColor', [1 0.5 0], 'FaceAlpha', 0.15);
-patch('Faces',mag_stl.faces, 'Vertices', mag_stl.vertices,...
-    'FaceColor', [.7 0.7 .7], 'EdgeColor', 'none');
+drawAxis3dOffset(T.mag_st, 10, 0.4);
+drawCuboid([0,0,0, 178, 168, 172], 'FaceColor',[1 0.5 0], 'FaceAlpha',0.15);
+patch('Faces',stl.omnimag.faces, 'Vertices',stl.omnimag.vertices, 'FaceColor',[.7 0.7 .7], 'EdgeColor','none');
 drawAxis3d(90,0.75);
-patch('Faces',ait_stl_magframe.faces, 'Vertices',...
-    ait_stl_magframe.vertices, 'FaceColor', [0 1 0.5], 'EdgeColor', 'none');
-drawAxis3dOffset(T_mag_ait, 10, 0.4);
-patch('Faces',fixture_stl_magframe.faces, 'Vertices',...
-    fixture_stl_magframe.vertices, 'FaceColor', [0 0.5 0.7], 'EdgeColor',...
-    'none','FaceAlpha', 0.3);
-drawAxis3dOffset(T_mag_fixture, 12, 0.4);
+patch('Faces',stl.ait_magframe.faces, 'Vertices',stl.ait_magframe.vertices, 'FaceColor',[0 1 0.5], 'EdgeColor','none');
+drawAxis3dOffset(T.mag_ait, 10, 0.4);
+patch('Faces',stl.fixture_magframe.faces, 'Vertices',stl.fixture_magframe.vertices, 'FaceColor',[0 0.5 0.7], 'EdgeColor','none', 'FaceAlpha',0.3);
+drawAxis3dOffset(T.mag_fixture, 12, 0.4);
 
 % Aesthetics
 view([123 11]);
@@ -469,74 +488,42 @@ p_light = [150, 1200, 350];
 light('Position', p_light, 'Style', 'local')
 material dull
 
-%% Export plan to .yaml file for ROS
-newFolderName = strcat('preoperative plans/PreopPlan_',...
-    datestr(now,'yyyy-mm-dd_HH-MM'));
-mkdir(newFolderName);
 
-% Save figures
-savefig(figure(1),strcat(newFolderName,'\Fig1'));
-savefig(figure(2),strcat(newFolderName,'\Fig2'));
-savefig(figure(3),strcat(newFolderName,'\Fig3'));
-savefig(figure(4),strcat(newFolderName,'\Fig4'));
+%% Export data
 
-yamlFileID = fopen(strcat(newFolderName,'/trajectory', '.yaml'),'w');
-export_data2ros(1:length(planned_pnts),...
-                insertion_depth,...
-                currents_scaled(:,planned_pnts),yamlFileID);
-            
-%% Export T_fixture_ait.txt => target pose of AIT in cochlea fixture frame
-fileID = fopen(strcat(newFolderName,'/T_ait_fixture','.txt'), 'wt');
-fprintf(fileID, '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(1,:));
-fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(2,:));
-fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(3,:));
-fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(4,:));
-fclose(fileID);
+if params.export_data
 
-
-%% Export T_fixture_mag.txt => target pose of Omnimagnet in cochlea fixture frame
-fileID = fopen(strcat(newFolderName,'/T_mag_fixture', '.txt'), 'wt');
-fprintf(fileID, '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(1,:));
-fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(2,:));
-fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(3,:));
-fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(4,:));
-fclose(fileID);
-
-if export_data
-    % Export plan to .yaml file for ROS
-
-    newFolderName = strcat('preoperative plans/PreopPlan_',...
-        datestr(now,'yyyy-mm-dd_HH-MM'));
+    % Create new folder
+    newFolderName = strcat('preoperative plans/PreopPlan_', datestr(now,'yyyy-mm-dd_HH-MM'));
     mkdir(newFolderName);
 
     % Save figures
-    savefig(figure(1),strcat(newFolderName,'\Fig1'));
-    savefig(figure(2),strcat(newFolderName,'\Fig2'));
-    savefig(figure(3),strcat(newFolderName,'\Fig3'));
-    savefig(figure(4),strcat(newFolderName,'\Fig4'));
-
-    yamlFileID = fopen(strcat(newFolderName,'/trajectory', '.yaml'),'w');
-    export_data2ros(1:length(planned_pnts),...
-                    insertion_depth,...
-                    currents_scaled(:,planned_pnts),yamlFileID);
-
+    savefig(h_fig,strcat(newFolderName,'\plan'));
+    
+    % Export Matlab workspace
+    delete(h_fig) % temporarily delete figure before exporting workspace since it is already saved
+    save(strcat(newFolderName,'/workspace.mat'));
+    openfig(strcat(newFolderName, '\plan.fig')); % re-open figure
 
     % Export T_fixture_ait.txt => target pose of AIT in cochlea fixture frame
     fileID = fopen(strcat(newFolderName,'/T_ait_fixture','.txt'), 'wt');
-    fprintf(fileID, '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(1,:));
-    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(2,:));
-    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(3,:));
-    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_ait_fixture(4,:));
+    fprintf(fileID, '%2.2f, %2.2f, %2.2f, %2.2f\n', T.ait_fixture(1,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T.ait_fixture(2,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T.ait_fixture(3,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T.ait_fixture(4,:));
     fclose(fileID);
+
 
     % Export T_fixture_mag.txt => target pose of Omnimagnet in cochlea fixture frame
     fileID = fopen(strcat(newFolderName,'/T_mag_fixture', '.txt'), 'wt');
-    fprintf(fileID, '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(1,:));
-    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(2,:));
-    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(3,:));
-    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T_mag_fixture(4,:));
+    fprintf(fileID, '%2.2f, %2.2f, %2.2f, %2.2f\n', T.mag_fixture(1,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T.mag_fixture(2,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T.mag_fixture(3,:));
+    fprintf(fileID,  '%2.2f, %2.2f, %2.2f, %2.2f\n', T.mag_fixture(4,:));
     fclose(fileID);
 
-    % Export Matlab workspace
-    save(strcat(newFolderName,'/workspace.mat'));
+    % Export plan to .yaml file for ROS
+    yamlFileID = fopen(strcat(newFolderName,'/trajectory', '.yaml'),'w');
+    export_data2ros(insertion_depth(mag.on), currents.scaled(:,mag.on), yamlFileID);
+    
 end
