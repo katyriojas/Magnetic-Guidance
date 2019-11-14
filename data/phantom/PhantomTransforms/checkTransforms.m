@@ -29,38 +29,23 @@ T_mag_fixture_goal = [tform_mag{1},tform_mag{2},tform_mag{3},tform_mag{4}];
 fclose(fileID);
 
 % Pull in Transforms
-basepath = strcat(pwd,'\g-saline-1.25\trial4-pre\');
-errname = 'g4-pre-';
-toggleMagSave = 1;
+basepath = strcat(pwd,'\ug-mea-saline-1.25\trial4-pre\');
+errname = 'ug4-pre-';
+toggleMagSave = 0;
 
 load(strcat(basepath,'T_cochlea_tracker.mat'));
 T_tracker_fixture = AffineTransform_double_3_3;
-load(strcat(basepath,'T_cochlea_tracker (2).mat'));
-T_tracker2_fixture = AffineTransform_double_3_3;
-load(strcat(basepath,'T_cochlea_tracker (3).mat'));
-T_tracker3_fixture = AffineTransform_double_3_3;
-T_tracker_fixture_avg = mean([T_tracker_fixture,T_tracker2_fixture,T_tracker3_fixture],2);
 
 load(strcat(basepath,'T_ait_tracker.mat')); % Loads in affine transform_3_3
 T_tracker_ait = AffineTransform_double_3_3;
-load(strcat(basepath,'T_ait_tracker (2).mat'));
-T_tracker2_ait = AffineTransform_double_3_3;
-load(strcat(basepath,'T_ait_tracker (3).mat'));
-T_tracker3_ait = AffineTransform_double_3_3;
-T_tracker_ait_avg = mean([T_tracker_ait,T_tracker2_ait,T_tracker3_ait],2);
 
 load(strcat(basepath,'T_mag_tracker.mat'));
 T_tracker_mag = AffineTransform_double_3_3;
-load(strcat(basepath,'T_mag_tracker (2).mat'));
-T_tracker2_mag = AffineTransform_double_3_3;
-load(strcat(basepath,'T_mag_tracker (3).mat'));
-T_tracker3_mag = AffineTransform_double_3_3;
-T_tracker_mag_avg = mean([T_tracker_mag,T_tracker2_mag,T_tracker3_mag],2);
 
 % Convert Transform to Tracker Space
-T_tracker_fixture = savedTransform2TrackerSpace(T_tracker_fixture_avg);
-T_tracker_ait = savedTransform2TrackerSpace(T_tracker_ait_avg);
-T_tracker_mag = savedTransform2TrackerSpace(T_tracker_mag_avg);
+T_tracker_fixture = savedTransform2TrackerSpace(T_tracker_fixture);
+T_tracker_ait = savedTransform2TrackerSpace(T_tracker_ait);
+T_tracker_mag = savedTransform2TrackerSpace(T_tracker_mag);
 
 T_tracker_ait_goal = T_tracker_fixture*inv(T_ait_fixture_goal);
 T_tracker_mag_goal = T_tracker_fixture*inv(T_mag_fixture_goal); % v1 in python code
