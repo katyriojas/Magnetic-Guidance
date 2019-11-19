@@ -13,7 +13,8 @@ function insertion_angle = MagneticGuidanceGetAngleFromVideo(video_path, smooth_
 
 if nargin < 1
     % sample video location
-    folderpath_vid = 'D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL\phantom_g_mea1_trial1_1.25';
+    folderpath_vid = 'C:\Users\riojaske\Documents\magsteer\Videos';
+%     folderpath_vid = 'D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL\phantom_g_mea1_trial1_1.25';
     filename_vid = 'trial1-guided-mea1-1.25-tracked.MP4';
     video_path = fullfile(folderpath_vid, filename_vid);
 end

@@ -22,13 +22,13 @@ filename_save = strcat(folderpath_vid,'\pman4_angular_depth.mat');
 
 video_path = fullfile(folderpath_vid, filename_vid);
 smooth_span = 10;
-mag = 300;
+magnification = 300;
 
 % load video and read first frame
 vid = VideoReader(video_path);
 vid.CurrentTime = 0;
 curr_frame = readFrame(vid);
-imshow(curr_frame,'InitialMagnification',mag); % show frame
+imshow(curr_frame,'InitialMagnification',magnification); % show frame
 
 % center
 fprintf('Select Center Location\n');
@@ -58,7 +58,7 @@ while hasFrame(vid)
     end
     % load next frame
     curr_frame = readFrame(vid);
-    imshow(curr_frame,'InitialMagnification',mag); % show frame
+    imshow(curr_frame,'InitialMagnification',magnification); % show frame
     
     frame_count = frame_count + 1;
     percDone = 100*frame_count/num_frames;
@@ -101,7 +101,7 @@ insertion_angle.angle_smooth = smooth(insertion_angle.time, insertion_angle.angl
 save(filename_save,'insertion_angle');
 
 %% plot
-figure(1); clf(1); grid on; hold on;
+figure(); clf(); grid on; hold on;
 xlabel('time (s)')
 ylabel('insertion angle (deg)')
 plot(insertion_angle.time, insertion_angle.angle, 'm')

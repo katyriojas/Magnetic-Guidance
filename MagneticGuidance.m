@@ -47,17 +47,17 @@ params.ramp_field = true;           % true => use ramp function for magnetic fie
 params.export_data = true;         % true => create new folder and export generated data
 
 
-params.ppr_filename = 'tbone4.ppr'; % PPR file location
-% params.ppr_filename = 'phantom1_preopPlan.ppr'; % PPR file location
+% params.ppr_filename = 'tbone4.ppr'; % PPR file location
+params.ppr_filename = 'phantom1_preopPlan.ppr'; % PPR file location
 
 
-params.medial_axis_filename = 'MedialAxis_Tbone4.txt'; % Medial axis file location
-% params.medial_axis_filename = 'phantom1_medial_axis_ct.txt'; % Medial axis file location
+% params.medial_axis_filename = 'MedialAxis_Tbone4.txt'; % Medial axis file location
+params.medial_axis_filename = 'phantom1_medial_axis_ct.txt'; % Medial axis file location
 
 params.basal_pts = 40:80; % medial axis points to use when fitting basal plane
 
 
-params.side = 'L'; % Left or Right Ear
+params.side = 'R'; % Left or Right Ear
 
 load('path.mat'); % loads 'path' -> lateral wall path
 if strcmp(params.side,'L')
@@ -72,7 +72,7 @@ params.end_depth = 27; %[mm]
 
 params.insertion_speed = 1.25; % [mm/s] linear insertion speed
 
-params.st_offset_from_mag_surface = 16; % [mm] distance between ST center and Omnimagnet's surface
+params.st_offset_from_mag_surface = 12; % [mm] distance between ST center and Omnimagnet's surface
 
 
 % Position [mm] of scala tympani (center) in the Omnimagnet's coordinate frame
@@ -84,8 +84,8 @@ params.t_mag_st = [0; 84 + params.st_offset_from_mag_surface; 0];
 params.Bmag_const = 78e-3; % [T]  (used if params.ramp_field = false)
 
 params.Bmag_start = 70e-3; % [T] (used if params.ramp_field = true)
-params.ramp_start = 16;    % [mm] (along insertion depth)
-params.Bmag_end   = 85e-3; % [T]
+params.ramp_start = 13;    % [mm] (along insertion depth)
+params.Bmag_end   = 90e-3; % [T]
 params.ramp_end   = 22.5;  % [mm] (along insertion depth)
 
 

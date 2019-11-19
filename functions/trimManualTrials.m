@@ -1,10 +1,18 @@
-% Katy RIojas
+% Katy Riojas
 % Trim to start and end points of insertion
 % 9/8/19
-function [p1_tvec,p1_vec,p2_tvec,p2_vec,p3_tvec,p3_vec,...
-    p4_tvec,p4_vec,c1_tvec,c1_vec,c2_tvec,c2_vec,c3_tvec,c3_vec,releaseTimes] = ...
-    trimManualTrials(data_pman1,data_pman2,data_pman3,data_pman4,...
-    data_cman1,data_cman2,data_cman3)
+function [phantom_trimmed,cadaver_trimmed,releaseTimes] = ...
+    trimManualTrials(data_manual_phantom,data_manual_cadaver)
+
+% Parse data structs
+data_pman1 = data_manual_phantom(1).nano;
+data_pman2 = data_manual_phantom(2).nano;
+data_pman3 = data_manual_phantom(3).nano;
+data_pman4 = data_manual_phantom(4).nano;
+
+data_cman1 = data_manual_cadaver(1).nano;
+data_cman2 = data_manual_cadaver(2).nano;
+data_cman3 = data_manual_cadaver(3).nano;
 
 %Find trim points for time vectors
 LL = 5;
@@ -92,7 +100,7 @@ pman3_release = data_pman3.time(p3_idx_release);
 p3_vec = p3_idx_start:p3_idx_end;
 p3_tvec = data_pman3.time(p3_vec);
 
-% Video 4
+% Video 4 - ignores second attempt
 pman4_peak_idx = find(data_pman4.Fmag>Fthresh1,1);
 tPP_pman4_idx = find(data_pman4.Fmag(pman4_peak_idx:end)<LL,1);
 tPP_pman4 = data_pman4.time(tPP_pman4_idx+pman4_peak_idx);
@@ -110,7 +118,7 @@ p4_tstart = tPP_pman4 + diff_pman4_start;
 p4_tend = p4_tstart + diff_pman4_end;
 p4_release = p4_tstart + diff_pman4_release;
 
-% find indexes for exporting
+% Find indexes for exporting
 p4_idx_start = find(data_pman4.time>p4_tstart,1);
 p4_idx_end = find(data_pman4.time>p4_tend,1);
 p4_idx_release = find(data_pman4.time>p4_release,1);
@@ -136,7 +144,7 @@ diff_cman1_release = cman1_vid_release - cman1_vid_start;
 
 c1_tstart = tPP_cman1 + diff_cman1_start;
 c1_tend = c1_tstart + diff_cman1_end;
-c1_release = c1_tstart + diff_cman1_release;
+% c1_release = c1_tstart + diff_cman1_release;
 
 % find indexes for exporting
 c1_idx_start = find(data_cman1.time>c1_tstart,1);
@@ -147,8 +155,8 @@ if isempty(c1_idx_end)
     c1_idx_end = find(data_cman1.time>c1_tend,1);
 end
 
-c1_idx_release = find(data_cman1.time>c1_release,1);
-cman1_release = data_cman1.time(c1_idx_release);
+% c1_idx_release = find(data_cman1.time>c1_release,1);
+% cman1_release = data_cman1.time(c1_idx_release);
 
 c1_vec = c1_idx_start:c1_idx_end;
 c1_tvec = data_cman1.time(c1_vec);
@@ -159,17 +167,17 @@ tPP_cman2_idx = find(data_cman2.Fmag(cman2_peak_idx:end)<LL,1);
 tPP_cman2 = data_cman2.time(tPP_cman2_idx+cman2_peak_idx);
 
 cman2_vid_tap = 5.17; %[s] % this is the end tap
-cman2_vid_start = 12.2; % [s] %unclear on vid
-cman2_vid_depth = 83; % [s]
+cman2_vid_start = 12.2; % [s] % unclear on vid
+cman2_vid_depth = 83; % [s] end of insertion
 % cman1_release = 106.12; % [s]
-diff_cman2_start = cman2_vid_start - cman2_vid_tap;
-diff_cman2_end = cman2_vid_depth - cman2_vid_start;
-c2_tstart = tPP_cman2 + diff_cman2_start;
-c2_tend = c2_tstart + diff_cman2_end;
+diff_cman2_start = cman2_vid_start - cman2_vid_tap; % diff in tap and start time
+diff_cman2_end = cman2_vid_depth - cman2_vid_start; %duration of insertion
+c2_tstart = tPP_cman2 + diff_cman2_start; % start time of insertion
+c2_tend = c2_tstart + diff_cman2_end; % end times
 % find indexes for exporting
-c2_idx_start = find(data_cman2.time>c2_tstart,1);
-c2_idx_end = find(data_cman2.Fmag(c2_idx_start:end)>Fthresh2,1);
-c2_idx_end = c2_idx_end + c2_idx_start - 1;
+c2_idx_start = find(data_cman2.time>c2_tstart,1); % find start index
+c2_idx_end = find(data_cman2.Fmag(c2_idx_start:end)>Fthresh2,1); % find end index
+c2_idx_end = c2_idx_end + c2_idx_start - 1; % find 
 
 if isempty(c2_idx_end)
     c2_idx_end = find(data_cman2.time>c2_tend,1);
@@ -204,5 +212,23 @@ c3_vec = c3_idx_start:c3_idx_end;
 c3_tvec = data_cman3.time(c3_vec);
 
 releaseTimes = [pman1_release;pman2_release;...
-    pman3_release;pman4_release;cman1_release];
+                pman3_release;pman4_release];%;cman1_release;cman2_release;cman3_release];
+
+% Deobfuscate
+phantom_trimmed(1).time = p1_tvec;
+phantom_trimmed(1).indices = p1_vec;
+phantom_trimmed(2).time = p2_tvec;
+phantom_trimmed(2).indices = p2_vec;
+phantom_trimmed(3).time = p3_tvec;
+phantom_trimmed(3).indices = p3_vec;
+phantom_trimmed(4).time = p4_tvec;
+phantom_trimmed(4).indices = p4_vec;
+
+cadaver_trimmed(1).time = c1_tvec;
+cadaver_trimmed(1).indices = c1_vec;
+cadaver_trimmed(2).time = c2_tvec;
+cadaver_trimmed(2).indices = c2_vec;
+cadaver_trimmed(3).time = c3_tvec;
+cadaver_trimmed(3).indices = c3_vec;
+
 end

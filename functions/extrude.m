@@ -125,7 +125,7 @@ if size(C,2) >= 3 %Use a 2nd order approximation for the derivatives of the traj
 else
     dC = C(:,[2 2]) - C(:,[1 1]);
 end
-dC0 = find(sum(abs(dC),1) == 0,1);    %Check for stagnation points
+dC0 = find(sum(abs(dC),1) == 0,1);    % Check for stagnation points
 if ~isempty(dC0) 
     warning('Removing stagnation points found in trajectory');
     dCgood = find(sum(abs(dC),1) ~= 0);

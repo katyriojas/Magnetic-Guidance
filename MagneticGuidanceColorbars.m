@@ -1,36 +1,51 @@
-%% Load data
+% Plot colorbar plot for all phantom data
+% Output is a figure with every individual trial (manual, UG, G) plotted as
+% a colorbar rectangle with the shaded region indicated Fmagsmooth
 
-% guided/unguided phantom data
-if ~exist('data', 'var')
-    load('data\phantom\data_phantom.mat'); % loads 'data'
+% Trevor Bruns and Katy Riojas
+% Last Updated: 11/19/19
+
+% TODO: Change so we don't need to run the bin script before running the
+% colorbar script
+
+%%
+regenerate_manual_data = false;
+regenerate_phantom_data = false;
+
+
+if regenerate_manual_data
+    LoadRALData_Manual; % regen data
+elseif ~exist('data_manual_phantom','var')
+    load('data\phantom\data_manual_phantom.mat'); % load already generated
+end
+if regenerate_phantom_data
+    LoadRALData_Robotic_Phantom % regen data
+elseif ~exist('data_robotic_phantom','var') % if not already loaded
+    load('data\phantom\data_robotic_phantom.mat'); % load already generated
 end
 
-% manual phantom data
-if ~exist('pman', 'var')
-    load('data\phantom\ManualPhantomData.mat'); % load 'pman'
-end
+%% Trim to 10 degrees from final angular depth for consistent comparison
+N = size(data_robotic_phantom,2); % assumes equal # of manual, unguided, and guided trials
 
-N = length(data); % assumes equal # of manual, unguided, and guided trials
+for ii = 1:N
+    
+    trim_ind_manual = find(data_manual_phantom(ii).binned.angle > (data_manual_phantom(ii).binned.angle(end)-10), 1);
+    trim_ind_nomag  = find(data_robotic_phantom(ii).nomag_mea_binned.angle > (data_robotic_phantom(ii).nomag_mea_binned.angle(end)-10), 1);
+    trim_ind_mag    = find(data_robotic_phantom(ii).mag_binned.angle > (data_robotic_phantom(ii).mag_binned.angle(end)-10), 1);
+    
+    phantom(ii).manual.angdepth = data_manual_phantom(ii).binned.angle(1:trim_ind_manual);
+    phantom(ii).manual.Fmag_smooth = data_manual_phantom(ii).binned.Fmag(1:trim_ind_manual);
 
-% trim to 10 deg from final angular depth
-for ii=1:N
-    trim_ind_manual = find(pman(ii).angdepth > (pman(ii).angdepth(end)-10), 1);
-    trim_ind_nomag  = find(data(ii).nomag_mea_interp_angdepth > (data(ii).nomag_mea_interp_angdepth(end)-10), 1);
-    trim_ind_mag    = find(data(ii).mag_interp_angdepth > (data(ii).mag_interp_angdepth(end)-10), 1);
+    phantom(ii).nomag.angdepth = data_robotic_phantom(ii).nomag_mea_binned.angle(1:trim_ind_nomag);
+    phantom(ii).nomag.Fmag_smooth = data_robotic_phantom(ii).nomag_mea_binned.Fmag(1:trim_ind_nomag);
 
-    phantom(ii).manual.angdepth = pman(ii).angdepth(1:trim_ind_manual);
-    phantom(ii).manual.Fmag_smooth = pman(ii).Fmag_smooth(1:trim_ind_manual);
-
-    phantom(ii).nomag.angdepth = data(ii).nomag_mea_interp_angdepth(1:trim_ind_nomag);
-    phantom(ii).nomag.Fmag_smooth = data(ii).nomag_mea.Fmag_smooth(1:trim_ind_nomag);
-
-    phantom(ii).mag.angdepth = data(ii).mag_interp_angdepth(1:trim_ind_mag);
-    phantom(ii).mag.Fmag_smooth = data(ii).mag.Fmag_smooth(1:trim_ind_mag);
+    phantom(ii).mag.angdepth = data_robotic_phantom(ii).mag_binned.angle(1:trim_ind_mag);
+    phantom(ii).mag.Fmag_smooth = data_robotic_phantom(ii).mag_binned.Fmag(1:trim_ind_mag);
+    
 end
 
 
 %% Create base profile (circle/square)
-
 base_type = 'square';
 width = 50;
 
@@ -53,7 +68,7 @@ end
 y_locations = linspace(3*spacing*N, 0, 3*N) - 1.5*spacing*N;
 y_locations = y_locations + [cases_gap*ones(1,N), zeros(1,N), -cases_gap*ones(1,N)];
   
-%% create paths
+%% Create paths
 
 for ii=1:N
     path(ii).manual = [phantom(ii).manual.angdepth,...
@@ -69,7 +84,7 @@ for ii=1:N
                       zeros(size(phantom(ii).mag.angdepth))]';
 end
 
-%% extrude path to create surface
+%% Extrude path to create surface
 
 for ii=1:N
     [X(ii).manual, Y(ii).manual, Z(ii).manual] = extrude(base, path(ii).manual, 0);
@@ -77,12 +92,8 @@ for ii=1:N
     [X(ii).nomag,  Y(ii).nomag,  Z(ii).nomag]  = extrude(base, path(ii).nomag, 0);
 end
 
-%% plot
-figure(13); clf(13); 
-% axis equal; 
-hold on; 
-% grid on;
-
+%% Plot shaded colorbar for each trial
+figure(1); clf(1); hold on; 
 
 % plot extrusions and map forces to CData
 for ii=1:N
@@ -96,17 +107,11 @@ for ii=1:N
     h(ii).nomag.CData = repmat(phantom(ii).nomag.Fmag_smooth', [length(base), 1]);
 end
 
-
-% add case labels
+% Add case labels
 text_locations = [30*ones(size(y_locations)); y_locations; 1.05*width*ones(size(y_locations))]';
 labels = {'Trial 1', 'Trial 2', 'Trial 3', 'Trial 4','Trial 1', 'Trial 2', 'Trial 3', 'Trial 4','Trial 1', 'Trial 2', 'Trial 3', 'Trial 4'};
 
-% for ii=1:length(text_locations)
-%     text('String',labels(ii), 'Position',text_locations(ii,:), 'FontSize',14, 'Color','w' );
-% end
-
-
-% find max force
+% Find max force
 temp = [phantom.manual];
 forces = vertcat(temp.Fmag_smooth);
 temp = [phantom.nomag];
@@ -115,27 +120,23 @@ temp = [phantom.mag];
 forces = vertcat(forces, temp.Fmag_smooth);
 max_force = max(forces);
 
-% colormap
+% Colormap
 load('forces_colormap.mat'); % loads forces_colormap (use colormapeditor to create/edit)
 cmap = colormap(forces_colormap);
-
 
 ax = gca;
 ax.FontSizeMode = 'manual';
 ax.FontSize = 14;
 ax.XTick = 0:90:630;
 ax.YTick = [];
-xlabel('Angular Insertion Depth (deg)', 'FontSize',14)
-xlim([10 630])
+xlabel('Angular Insertion Depth (deg)', 'FontSize',14);
+xlim([10 630]);
 
-set(gca,'ytick',[])
-set(gca,'yticklabel',[])
-ylim([min(y_locations)-width/2, max(y_locations)+width/2])
+set(gca,'ytick',[]);
+set(gca,'yticklabel',[]);
+ylim([min(y_locations)-width/2, max(y_locations)+width/2]);
 
-% set(gca,'ztick',[])
-% set(gca,'zticklabel',[])
-
-shading flat
+shading flat;
 
 cbar = colorbar('Limits', [0 max_force]);
 cbar.Label.String = 'Force (mN)';
