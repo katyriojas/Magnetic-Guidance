@@ -11,6 +11,8 @@
 % A Magnetic_Guidance class instance is created for each trial
 % The videos are processed to analyze AID vs. linear insertion depth
 
+update_saved_phantom_data = true; % default is true - update saved.mat after regenerating
+
 addpath('classDef','functions','data');
 load('avg_cal_slopes.mat'); % loads cal_slopes
 base_path = 'data\phantom\';
@@ -130,8 +132,13 @@ nomag3_interp_angdepth = [data_robotic_phantom(3).nomag_mea_interp_angdepth; dat
 
 nomag3_insertion_depths = linspace(data_robotic_phantom(3).nomag_mea.depth_insertion(1), data_robotic_phantom(3).nomag_mea.depth_insertion(end), length(nomag3_interp_angdepth));
 
-% re-interpolate so you have angular insertion depths match linear
-% insertion depths from ROS
-data_robotic_phantom(3).nomag_mea_interp_angdepth = interp1(nomag3_insertion_depths,...
-                                            nomag3_interp_angdepth,...
-                                            data_robotic_phantom(3).nomag_mea.depth_insertion, 'linear', 'extrap');
+% Re-interpolate so you have angular insertion depths match linear
+% Insertion depths from ROS
+data_robotic_phantom(3).nomag_mea_interp_angdepth = ...
+    interp1(nomag3_insertion_depths,nomag3_interp_angdepth,...
+            data_robotic_phantom(3).nomag_mea.depth_insertion, 'linear', 'extrap');
+
+%% Update Saved Phantom Data if it is called for
+if update_saved_phantom_data
+   save('data\phantom\data_robotic_phantom.mat','data_robotic_phantom');
+end

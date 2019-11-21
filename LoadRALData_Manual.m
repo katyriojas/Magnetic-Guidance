@@ -70,6 +70,7 @@ for ii = 1:length(filepaths_manual_cadaver)
     data_manual_cadaver(ii).trim_idx = cadaver_trimmed(ii).indices;
 end
 
+%% Update saved manual data if requested
 if update_saved_manual_data
     save('data\phantom\data_manual_phantom.mat','data_manual_phantom');
     save('data\cadaver\data_manual_cadaver.mat','data_manual_cadaver');

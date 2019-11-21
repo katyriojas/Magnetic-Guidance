@@ -10,6 +10,7 @@
 % (script assumes equal number of trials for processing)
 
 % A Magnetic_Guidance class instance is created for each trial
+update_saved_cadaver_data = true;
 
 addpath('classDef','functions','data');
 load('avg_cal_slopes.mat'); % loads cal_slopes
@@ -52,16 +53,41 @@ Fthresh = 125; %[mN] force threshold
 
 % Just pulling out end index - note, this won't actually trim the data
 for ii = 1:length(filepaths_robotic_cadaver)
-    nomagii_end = find(data_robotic_cadaver(ii).nomag.Fmag>Fthresh,1);
-    magii_end = find(data_robotic_cadaver(ii).mag.Fmag>Fthresh,1);
+    
+    nomagii_end = find(data_robotic_cadaver(ii).nomag.Fmag>Fthresh,1)-1;
+    magii_end = find(data_robotic_cadaver(ii).mag.Fmag>Fthresh,1)-1;
+    
     if isempty(nomagii_end)
         robotic_cadaver_nomag_end(ii) = length(data_robotic_cadaver(ii).nomag.Fmag);
     else
         robotic_cadaver_nomag_end(ii) = nomagii_end;
     end
+    
     if isempty(magii_end)
         robotic_cadaver_mag_end(ii) = length(data_robotic_cadaver(ii).mag.Fmag);
     else
         robotic_cadaver_mag_end(ii) = magii_end;
     end
+    
+    % Add Trimmed Fields to struct
+    data_robotic_cadaver(ii).nomag_depth_insertion_trimmed = ...
+        data_robotic_cadaver(ii).nomag.depth_insertion(1:robotic_cadaver_nomag_end(ii));
+    data_robotic_cadaver(ii).mag_depth_insertion_trimmed = ...
+        data_robotic_cadaver(ii).mag.depth_insertion(1:robotic_cadaver_mag_end(ii));
+    
+    data_robotic_cadaver(ii).nomag_Fmag_trimmed = ...
+        data_robotic_cadaver(ii).nomag.Fmag(1:robotic_cadaver_nomag_end(ii));
+    data_robotic_cadaver(ii).mag_Fmag_trimmed = ...
+        data_robotic_cadaver(ii).mag.Fmag(1:robotic_cadaver_mag_end(ii));
+    
+    data_robotic_cadaver(ii).nomag_Fmagsmooth_trimmed = ...
+        data_robotic_cadaver(ii).nomag.Fmag_smooth(1:robotic_cadaver_nomag_end(ii));
+    data_robotic_cadaver(ii).mag_Fmagsmooth_trimmed = ...
+        data_robotic_cadaver(ii).mag.Fmag_smooth(1:robotic_cadaver_mag_end(ii));
+end
+
+
+%% Update saved cadaver data if requested
+if update_saved_cadaver_data
+   save('data\cadaver\data_robotic_cadaver.mat','data_robotic_cadaver');
 end

@@ -6,14 +6,15 @@
     % update saved data_robotic_phantom.mat.
 
 % Trevor Bruns and Katy Riojas
-% Last Updated: 11/19/19
+% Last Updated: 11/21/19
 
 %% Regenerate data if requested
 regenerate_robotic_cadaver_data = true;
-update_saved_cadaver_data = false;
 
 if regenerate_robotic_cadaver_data
     LoadRALData_Robotic_Cadaver;
+elseif ~exist('data_robotic_cadaver','var') % if not already loaded
+    load('data\cadaver\data_robotic_cadaver.mat'); % load already generated
 end
 
 %% Initializations
@@ -51,8 +52,8 @@ for ii = 1:size(data_robotic_cadaver,2)
     plot(data_robotic_cadaver(ii).nomag.depth_insertion, ...
         data_robotic_cadaver(ii).nomag.Fmag_smooth,...
         'Color', colorsMat(1,:), 'LineWidth',line_width_smooth);
-    scatter(data_robotic_cadaver(ii).nomag.depth_insertion(robotic_cadaver_nomag_end(ii)),...
-            data_robotic_cadaver(ii).nomag.Fmag(robotic_cadaver_nomag_end(ii)),...
+    scatter(data_robotic_cadaver(ii).nomag_depth_insertion_trimmed(end),...
+            data_robotic_cadaver(ii).nomag_Fmag_trimmed(end),...
             10,'filled','r');
         
     % Plot the guided data on the bottom row
@@ -70,8 +71,8 @@ for ii = 1:size(data_robotic_cadaver,2)
     plot(data_robotic_cadaver(ii).mag.depth_insertion, ...
         data_robotic_cadaver(ii).mag.Fmag_smooth,...
         'Color', colorsMat(1,:), 'LineWidth',line_width_smooth);
-    scatter(data_robotic_cadaver(ii).mag.depth_insertion(robotic_cadaver_mag_end(ii)),...
-            data_robotic_cadaver(ii).mag.Fmag(robotic_cadaver_mag_end(ii)),...
+    scatter(data_robotic_cadaver(ii).mag_depth_insertion_trimmed(end),...
+            data_robotic_cadaver(ii).mag_Fmag_trimmed(end),...
             10,'filled','r');   
     
 end
@@ -115,9 +116,3 @@ title('Fx, Fy, and Fz vs Linear Insertion Depth')
 xlabel('Linear Insertion Depth (mm)')
 ylabel('Force (mN)')
 legend([h(1).nomag,h(1).mag], [{'UG-Fx','UG-FY','UG-Fz'},{'G-Fx', 'G-Fy', 'G-Fz'}], 'Location', 'sw')
-
-
-%% Save Cadaver Data Struct if requested
-if update_saved_cadaver_data
-   save('data\cadaver\data_robotic_cadaver.mat','data_robotic_cadaver');
-end

@@ -11,6 +11,7 @@
 
 regenerate_manual_data = false;
 regenerate_phantom_data = false;
+update_saved_phantom_structs = true; % default to true - need binned data for colorbar plot
 
 if regenerate_manual_data
     LoadRALData_Manual; % regen data
@@ -130,3 +131,9 @@ plot(AOIvec-degspan/2, manual_binnedFmag_avg, 'Color', 'r','LineWidth',1,'LineSt
 plot(AOIvec-degspan/2, robotic_ug_binnedFmag_avg, 'Color', 'b','LineWidth',1,'LineStyle','-');
 plot(AOIvec-degspan/2, robotic_g_binnedFmag_avg, 'Color', 'g','LineWidth',1,'LineStyle','-');
 legend('Manual','Robotic','Robotic & Magnetic Steering');
+
+%% Update Saved Phantom Data if it is called for
+if update_saved_phantom_structs
+   save('data\phantom\data_manual_phantom.mat','data_manual_phantom');
+   save('data\phantom\data_robotic_phantom.mat','data_robotic_phantom');
+end

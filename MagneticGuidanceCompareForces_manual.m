@@ -14,7 +14,9 @@
 regenerate_manual_data = true;
 
 if regenerate_manual_data
-    LoadRALData_Manual;
+    LoadRALData_Manual; % regen data
+elseif ~exist('data_manual_phantom','var')
+    load('data\phantom\data_manual_phantom.mat'); % load already generated
 end
 
 %% Plotting Variables

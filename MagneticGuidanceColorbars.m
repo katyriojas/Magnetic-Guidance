@@ -3,21 +3,18 @@
 % a colorbar rectangle with the shaded region indicated Fmagsmooth
 
 % Trevor Bruns and Katy Riojas
-% Last Updated: 11/19/19
-
-% TODO: Change so we don't need to run the bin script before running the
-% colorbar script
+% Last Updated: 11/21/19
 
 %%
 regenerate_manual_data = false;
 regenerate_phantom_data = false;
-
 
 if regenerate_manual_data
     LoadRALData_Manual; % regen data
 elseif ~exist('data_manual_phantom','var')
     load('data\phantom\data_manual_phantom.mat'); % load already generated
 end
+
 if regenerate_phantom_data
     LoadRALData_Robotic_Phantom % regen data
 elseif ~exist('data_robotic_phantom','var') % if not already loaded

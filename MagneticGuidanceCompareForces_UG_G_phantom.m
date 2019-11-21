@@ -9,15 +9,16 @@
     % update saved data_robotic_phantom.mat.
 
 % Trevor Bruns and Katy Riojas
-% Last Updated: 11/19/19
+% Last Updated: 11/21/19
 
 %% Regenerate Phantom data if requested
 regenerate_phantom_data = true;
-update_saved_phantom_data = false;
 
 % guided/unguided phantom data
 if regenerate_phantom_data
-    LoadRALData_Robotic_Phantom;
+    LoadRALData_Robotic_Phantom % regen data
+elseif ~exist('data_robotic_phantom','var') % if not already loaded
+    load('data\phantom\data_robotic_phantom.mat'); % load already generated
 end
 
 %% Initializations
@@ -117,6 +118,7 @@ end
 xlabel('Actuator Insertion Distance (mm)')
 ylabel('Angular Insertion Depth (deg)')
 
+clear labels;
 labels.mag = {'mag1','mag2','mag3','mag4'};
 labels.nomag = {'nomag1','nomag2','nomag3','nomag4'};
 legend([h_nomag(1:ii),h_mag(1:ii)], [labels.nomag(1:ii),labels.mag(1:ii)], 'Location','nw')
@@ -145,6 +147,7 @@ title('Force vs Angular Insertion Depth')
 xlabel('Angular insertion depth (deg)')
 ylabel('||Force|| (mN)')
 
+clear labels;
 labels.mag = {'mag1','mag2','mag3','mag4'};
 labels.nomag = {'nomag1','nomag2','nomag3','nomag4'};
 legend([h_nomag(1:ii),h_mag(1:ii)], [labels.nomag(1:ii),labels.mag(1:ii)], 'Location','nw')
@@ -152,7 +155,6 @@ legend([h_nomag(1:ii),h_mag(1:ii)], [labels.nomag(1:ii),labels.mag(1:ii)], 'Loca
 %% Plot -> XYZ Force vs. Angular insertion depth
 figure(5); clf(5); 
 hold on; grid on;
-
 
 for ii = 1:size(data_robotic_phantom,2)
    
@@ -189,8 +191,3 @@ title('Force vs Linear Insertion Depth')
 xlabel('Linear Insertion Depth (mm)')
 ylabel('||Force|| (mN)')
 legend([h(1).nomag,h(1).mag,], [{'UG-Fx','UG-FY','UG-Fz'},{'G-Fx', 'G-Fy', 'G-Fz'}], 'Location', 'sw')
-                                     
-%% Save Force Magnitudes for each trials
-if update_saved_phantom_data
-   save('data\phantom\data_robotic_phantom.mat','data_robotic_phantom');
-end
