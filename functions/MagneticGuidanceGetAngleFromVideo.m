@@ -9,7 +9,7 @@
 
 function insertion_angle = MagneticGuidanceGetAngleFromVideo(video_path, smooth_span)
 
-%% parameters
+%% Parameters
 
 if nargin < 1
     % sample video location
@@ -36,7 +36,7 @@ hsv_tolerance = [0.1, 0.3, 0.3];
 
 % load video and read first frame
 vid = VideoReader(video_path);
-vid.CurrentTime = 0;
+start_time = vid.CurrentTime;
 curr_frame = readFrame(vid);
 
 % center
@@ -55,19 +55,19 @@ end
 % 0 degree vector
 angle0.vec = angle0.props.Centroid - center.props.Centroid;
 
-
-%% step through video and determine angle
-num_frames = floor(vid.FrameRate*vid.Duration) - 1; % approximate so we can pre-allocate without overshooting
+%% Step through video and determine angle
+num_frames = floor(vid.FrameRate*vid.Duration); % approximate so we can pre-allocate without overshooting
 insertion_angle.time  = zeros(1,num_frames); % [s]
 insertion_angle.angle = zeros(1,num_frames); % [deg]
 frame_count = 0;
 vid.CurrentTime = 0;
 
-% tic;
 while hasFrame(vid)
     % load next frame
-    curr_frame = readFrame(vid);
     frame_count = frame_count + 1;
+    insertion_angle.time(frame_count) = vid.CurrentTime;
+    curr_frame = readFrame(vid);
+    
     
     % segment tip marker
     tip.pixels = segmentPixelsByColor(curr_frame, tip.color, hsv_tolerance);
@@ -80,15 +80,10 @@ while hasFrame(vid)
     
     % find angle
     tip.vec = tip.props.Centroid - center.props.Centroid;
-    insertion_angle.time(frame_count) = vid.CurrentTime;
     insertion_angle.angle(frame_count) = rad2deg( vectorAngle(angle0.vec, tip.vec) );
     
 end
-% toc
 
-% ensure time increases monotonically (last frame shows previous time for some reason)
-insertion_angle.time(end)  = [];
-insertion_angle.angle(end) = [];
 
 %% account 360 degree 'rollover'
 ang_temp = insertion_angle.angle;

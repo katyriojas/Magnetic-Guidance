@@ -11,32 +11,34 @@
 clear all; close all; clc;
 folderpath_vid = 'C:\Users\riojaske\Documents\magsteer\Magnetic-Guidance\data\phantom\manual';
 
-% filename_vid = '\videos\trial1\trial1-manual-ea1-cropped-10fps.mp4';
-% filename_save = strcat(folderpath_vid,'\pman1_angular_depth.mat');
-% filename_vid = '\videos\trial2\trial2-manual-ea1-10fps.mp4';
-% filename_save = strcat(folderpath_vid,'\pman2_angular_depth.mat');
-% filename_vid = '\videos\trial3\trial3-manual-ea1-cropped-10fps.mp4';
-% filename_save = strcat(folderpath_vid,'\pman3_angular_depth.mat');
-filename_vid = '\videos\trial4\trial4-manual-ea2-cropped-10fps.mp4';
-filename_save = strcat(folderpath_vid,'\pman4_angular_depth.mat');
+% filename_vid = '\videos\trial1\trial1-manual-ea1-cropped-60fps.mp4';
+% filename_save = strcat(folderpath_vid,'\pman1_60fps_angular_depth.mat');
+% filename_vid = '\videos\trial2\trial2-manual-ea1-cropped-60fps.mp4';
+% filename_save = strcat(folderpath_vid,'\pman2_60fps_angular_depth.mat');
+% filename_vid = '\videos\trial3\trial3-manual-ea1-cropped-60fps.mp4';
+% filename_save = strcat(folderpath_vid,'\pman3_60fps_angular_depth.mat');
+filename_vid = '\videos\trial4\trial4-manual-ea2-cropped-60fps_divide.mp4';
+filename_save = strcat(folderpath_vid,'\pman4_60fps_angular_depth.mat');
 
 video_path = fullfile(folderpath_vid, filename_vid);
-smooth_span = 10;
+
+% This should be equal to robotic phantom data if the frame rates are the same
+smooth_span = 40; % number of samples to smooth
 magnification = 300;
 
-% load video and read first frame
+% Load video and read first frame
 vid = VideoReader(video_path);
-vid.CurrentTime = 0;
+start_time = vid.CurrentTime;
 curr_frame = readFrame(vid);
 imshow(curr_frame,'InitialMagnification',magnification); % show frame
 
-% center
+% Center Point
 fprintf('Select Center Location\n');
 [centerX,centerY] = ginput(1);
 centerPnt = [centerX;centerY];
 
-fprintf('Select 0 degree Mark\n');
 % 0 degree marker
+fprintf('Select 0 degree Mark\n');
 [angle0X,angle0Y] = ginput(1);
 angle0Pnt = [angle0X;angle0Y];
 clf();
@@ -45,42 +47,41 @@ clf();
 angle0.vec = angle0Pnt - centerPnt;
 
 %% Step through video and determine angle
-num_frames = floor(vid.FrameRate*vid.Duration) - 1; % approximate so we can pre-allocate without overshooting
+num_frames = floor(vid.FrameRate*vid.Duration); % Total frames
 insertion_angle.time  = zeros(1,num_frames); % [s]
 insertion_angle.angle = zeros(1,num_frames); % [deg]
 frame_count = 0;
 vid.CurrentTime = 0;
 
-% tic;
 while hasFrame(vid)
     if frame_count == 0
       fprintf('Select Tip location (most distal end of most apical electrode pad\n');
     end
-    % load next frame
-    curr_frame = readFrame(vid);
-    imshow(curr_frame,'InitialMagnification',magnification); % show frame
     
     frame_count = frame_count + 1;
-    percDone = 100*frame_count/num_frames;
-    fprintf('%2.1f perc\n',percDone)
+    insertion_angle.time(frame_count) = vid.CurrentTime;
+    curr_frame = readFrame(vid); % read next frame, this will increment time
+    imshow(curr_frame,'InitialMagnification',magnification); % show frame
     
-    % segment tip marker
+    percDone = 100*frame_count/num_frames;
+    fprintf('%2.3f perc\n',percDone)
+    
+    % Segment tip marker
     [tipX,tipY] = ginput(1);
     tipPnt = [tipX;tipY];
     
-    % find angle
+    % Find angle
     tip.vec = tipPnt - centerPnt;
-    insertion_angle.time(frame_count) = vid.CurrentTime;
     insertion_angle.angle(frame_count) = rad2deg(vectorAngle(angle0.vec',tip.vec'));
     
 end
-% toc
 
-% ensure time increases monotonically (last frame shows previous time for some reason)
-insertion_angle.time(end)  = [];
-insertion_angle.angle(end) = [];
+% Ensure time increases monotonically (last frame shows previous time for some reason)
+%delete after the fact if we want to.
+% insertion_angle.time(end)  = [];
+% insertion_angle.angle(end) = [];
 
-%% account 360 degree 'rollover'
+%% Account 360 degree 'rollover'
 ang_temp = insertion_angle.angle;
 for ii = 2:length(ang_temp)
     if (ang_temp(ii)-ang_temp(ii-1)) > 180
@@ -94,15 +95,15 @@ end
 
 insertion_angle.angle = -(insertion_angle.angle-360);
 
-%% smooth
-insertion_angle.angle_smooth = smooth(insertion_angle.time, insertion_angle.angle, smooth_span, 'rloess')';
+%% Smooth
+insertion_angle.angle_smooth = smooth(insertion_angle.time, insertion_angle.angle, smooth_span,'rloess')';
 
-%% save
+%% Save
 save(filename_save,'insertion_angle');
 
-%% plot
+%% Plot
 figure(); clf(); grid on; hold on;
-xlabel('time (s)')
-ylabel('insertion angle (deg)')
-plot(insertion_angle.time, insertion_angle.angle, 'm')
-plot(insertion_angle.time, insertion_angle.angle_smooth, 'b')
+xlabel('Time (s)')
+ylabel('Insertion Angle (deg)')
+plot(insertion_angle.time,insertion_angle.angle,'m','LineWidth',2)
+plot(insertion_angle.time,insertion_angle.angle_smooth,'b','LineWidth',2)

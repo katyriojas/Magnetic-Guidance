@@ -2,6 +2,7 @@
 % Trevor Bruns and Katy Riojas
 % Last Updated: 11/14/19
 
+% TODO: Change linear interpolation to not extrapolate for angle
 update_saved_manual_data = true; % specify whether to save regenerated data
 
 %% Import Force data
@@ -39,7 +40,7 @@ end
 %% Pull in phantom AID data (manually selected) 
 % Note only have this for phantom
 for ii = 1:length(filepaths_manual_phantom)
-    load(strcat('data\phantom\manual\pman',num2str(ii),'_angular_depth.mat'));
+    load(strcat('data\phantom\manual\pman',num2str(ii),'_60fps_angular_depth.mat'));
     data_manual_phantom(ii).angular_depth = insertion_angle;
 end
 
@@ -48,9 +49,8 @@ for ii = 1:length(filepaths_manual_phantom)
  
     data_manual_phantom(ii).interp_angdepth = ...
         interp1(data_manual_phantom(ii).angular_depth.time,...
-                data_manual_phantom(ii).angular_depth.angle,...
-                phantom_trimmed(ii).time - phantom_trimmed(ii).time(1),...
-                'linear','extrap');
+                data_manual_phantom(ii).angular_depth.angle_smooth,...
+                phantom_trimmed(ii).time - phantom_trimmed(ii).time(1));
 end
 
 %% Add trimmed result to struct

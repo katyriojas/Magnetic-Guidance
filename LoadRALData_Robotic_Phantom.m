@@ -88,7 +88,6 @@ filepaths_robotic_phantom(3).mag.vid       = fullfile(video_base_path, 'phantom_
 filepaths_robotic_phantom(4).nomag_mea.vid = fullfile(video_base_path, 'phantom_ug_mea1_trial4_1.25\trial4-ug-mea1-tracked.mp4');
 filepaths_robotic_phantom(4).mag.vid       = fullfile(video_base_path, 'phantom_g_mea1_trial4_1.25\trial4-g-mea1-tracked.mp4');
 
-% for ii = 1:2
 for ii = 1:length(filepaths_robotic_phantom)
     
     % Segment video frames to determine angular depth
@@ -99,13 +98,13 @@ for ii = 1:length(filepaths_robotic_phantom)
     data_robotic_phantom(ii).mag_interp_angdepth = ...
         interp1(data_robotic_phantom(ii).mag_angular_depth.time,...
                 data_robotic_phantom(ii).mag_angular_depth.angle_smooth,...
-                data_robotic_phantom(ii).mag.time_insertion, 'linear', 'extrap');
+                data_robotic_phantom(ii).mag.time_insertion);
 
     if ii~=3 % video stopped early on nomag trial 3  
         data_robotic_phantom(ii).nomag_mea_interp_angdepth = ...
             interp1(data_robotic_phantom(ii).nomag_mea_angular_depth.time,...
                     data_robotic_phantom(ii).nomag_mea_angular_depth.angle_smooth,...
-                    data_robotic_phantom(ii).nomag_mea.time_insertion, 'linear', 'extrap');
+                    data_robotic_phantom(ii).nomag_mea.time_insertion);
     end
 
 end

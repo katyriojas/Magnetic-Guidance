@@ -1,18 +1,23 @@
 % Katy Riojas
+% Last Updated 11/25/19
 % Plot angle and video
-% Adjust to save center, zero, and xy positions
 
 % Sample video location
 clear all; close all; clc;
 folderpath_vid = 'C:\Users\riojaske\Documents\magsteer\Magnetic-Guidance\data\phantom\manual';
 
-filename_vid = '\videos\trial1\trial1-manual-ea1-cropped-10fps.mp4';
-filename_save = strcat(folderpath_vid,'\pman1_angular_depth.mat');
-% filename_vid = '\videos\trial2\trial2-manual-ea1-10fps.mp4';
+% filename_vid = '\videos\trial1\trial1-manual-ea1-cropped-60fps.mp4';
+% filename_save = strcat(folderpath_vid,'\pman1_60fps_angular_depth.mat');
+% filename_vid = '\videos\trial2\trial2-manual-ea1-cropped-60fps.mp4';
+% filename_save = strcat(folderpath_vid,'\pman2_60fps_angular_depth.mat');
+% filename_vid = '\videos\trial3\trial3-manual-ea1-cropped-60fps.mp4';
+% filename_save = strcat(folderpath_vid,'\pman3_60fps_angular_depth.mat');
+filename_vid = '\videos\trial4\trial4-manual-ea2-cropped-60fps_divide.mp4';
+filename_save = strcat(folderpath_vid,'\pman4_60fps_angular_depth.mat');
+filename_save_new = strcat(folderpath_vid,'\videos\trial4\pman4_60fps');
+% filename_save = strcat(folderpath_vid,'\pman1_angular_depth.mat');
 % filename_save = strcat(folderpath_vid,'\pman2_angular_depth.mat');
-% filename_vid = '\videos\trial3\trial3-manual-ea1-cropped-10fps.mp4';
 % filename_save = strcat(folderpath_vid,'\pman3_angular_depth.mat');
-% filename_vid = '\videos\trial4\trial4-manual-ea2-cropped-10fps.mp4';
 % filename_save = strcat(folderpath_vid,'\pman4_angular_depth.mat');
 load(filename_save);
 
@@ -30,6 +35,7 @@ fprintf('Select Center Location\n');
 [centerX,centerY] = ginput(1);
 centerPnt = [centerX;centerY];
 fprintf('Select 0 degree Mark\n');
+
 % 0 degree marker
 [angle0X,angle0Y] = ginput(1);
 angle0Pnt = [angle0X;angle0Y];
@@ -38,16 +44,18 @@ clf();
 % 0 degree vector
 angle0vec = angle0Pnt - centerPnt;
 
-num_frames = floor(vid.FrameRate*vid.Duration) - 1; % approximate so we can pre-allocate without overshooting
-% insertion_angle.time  = zeros(1,num_frames); % [s]
-% insertion_angle.angle = zeros(1,num_frames); % [deg]
+num_frames = floor(vid.FrameRate*vid.Duration);
 frame_count = 0;
 vid.CurrentTime = 0;
 
-% tic;
+% Export results as a vid
+new_vid = VideoWriter(filename_save_new,'Uncompressed AVI');
+new_vid.FrameRate = 1; %fps
+open(new_vid);
+
 while hasFrame(vid)
 
-    % load next frame
+    % Load next frame
     curr_frame = readFrame(vid);
     imshow(curr_frame,'InitialMagnification',mag); % show frame
     hold on;
@@ -67,15 +75,19 @@ while hasFrame(vid)
     scatter(centerPnt(1),centerPnt(2),'filled','b');
     scatter(h(1),h(2),'filled','r');
     scatter(zeroVec(1),zeroVec(2),'filled','g');
-    text(381,144,num2str(insertion_angle.angle(frame_count)));
-    text(381,160,num2str(insertion_angle.angle_smooth(frame_count)));
+    text(250,144,strcat('Angle:',{' '},num2str(insertion_angle.angle(frame_count))));
+    text(250,160,strcat('Smoothed Angle:',{' '},num2str(insertion_angle.angle_smooth(frame_count))));
+    text(250,174,strcat('Percent Done: ',{' '},num2str(percDone)));
     drawnow;
+    F = getframe(gca);
+    writeVideo(new_vid,F);
     clf();
     
 end
 
+close(new_vid);
 figure(); grid on; hold on;
-plot(insertion_angle.angle,'b:','LineWidth',1)
-plot(insertion_angle.angle_smooth,'r:','LineWidth',1)
+plot(insertion_angle.angle,'b:','LineWidth',2)
+plot(insertion_angle.angle_smooth,'r:','LineWidth',2)
 legend('Angle','Smoothed Angle');
 legend('Raw Angle','Smoothed Angle');
