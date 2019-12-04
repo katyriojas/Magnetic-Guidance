@@ -52,14 +52,22 @@ std_mag = std(Fmag_cadaver_g);
 set(gca,'fontname','Arial');
 
 figure(1); clf(1); grid on; hold on;
-xlabel('Insertion Depth [mm]'); ylabel('Average ||Force|| [mN]');
+xlabel('Insertion Depth (mm)','FontWeight','bold'); 
+ylabel('Average Force (mN)','FontWeight','bold');
 xlim([0,min_robotic_cadaver_X]);
 ylim([0,max_robotic_cadaver_Y]);
 
-h1 = plot(xvec, Favg_nomag, 'Color', 'r', 'LineWidth',1,'LineStyle','--');
+h1 = plot(xvec, Favg_nomag, 'Color', 'b', 'LineWidth',1,'LineStyle','--');
 fill([xvec fliplr(xvec)],[Favg_nomag + std_nomag, fliplr(Favg_nomag-std_nomag)],...
-    'r','FaceAlpha',0.2,'LineStyle','none');
-h2 = plot(xvec, Favg_mag, 'Color', 'b', 'LineWidth',1,'LineStyle','-');
-fill([xvec fliplr(xvec)],[Favg_mag + std_mag, fliplr(Favg_mag-std_mag)],...
     'b','FaceAlpha',0.2,'LineStyle','none');
-legend([h1,h2],{'Robotic','Robotic & Magnetic Steering'});
+h2 = plot(xvec, Favg_mag, 'Color', 'g', 'LineWidth',1,'LineStyle','-');
+fill([xvec fliplr(xvec)],[Favg_mag + std_mag, fliplr(Favg_mag-std_mag)],...
+    'g','FaceAlpha',0.2,'LineStyle','none');
+legend([h1,h2],{'Robotic','Robotic & Magnetic Steering'},'Location','northwest');
+
+set(0,'DefaultAxesFontSize',10);
+set(0,'DefaultAxesFontName','Arial');
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 3.6 2];
+saveas(fig,'saved figures\AvgCadavervs.LID.pdf');

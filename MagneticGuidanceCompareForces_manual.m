@@ -11,7 +11,7 @@
 
 
 %% Regenerate data if requested
-regenerate_manual_data = true;
+regenerate_manual_data = false;
 
 if regenerate_manual_data
     LoadRALData_Manual; % regen data
@@ -22,16 +22,17 @@ end
 %% Plotting Variables
 addpath('functions');
 alpha = 1; % line opacity
-colorsBlue = [0.36,0.54,0.66;...
-              0,0,1;...
-              0,1,1;...
-              0.13,0.67,0.8]; % pull in a set of distinguishable colors
+colorsRed = [1,0,0;...
+             1,0,0.3;...
+             0.76,0.23,0.13;...
+              1,0,0]; % pull in a set of distinguishable colors
 max_robotic_cadaver_Y = 0;
 xyzColors = [1,0,0;0,1,0;0,0,1;...
             1,0,1;0,0.2,0.13;0,1,1];
 line_width_smooth = 1.5;
 line_width_raw = 0.75;
 line_width_vline = 2;
+line_style_mat = {'-','--',':'};
 
 %% Calculate Max Y for both phantom and cadaver
 max_manual_phantomY = 0;
@@ -145,25 +146,33 @@ ylim([0,max_manual_phantomY]);
 for ii = 1:size(data_manual_phantom,2)
     plot(data_manual_phantom(ii).time_trimmed,...
          data_manual_phantom(ii).Fmag_trimmed,...
-         'Color',colorsBlue(ii,:),'LineWidth',line_width_smooth);
+         'Color',colorsRed(ii,:),'LineWidth',line_width_raw);
 end
 
 legend('Trial 1','Trial 2','Trial 3','Trial 4');
 
 %% Plot the Force Magnitude vs. Time for Manual Cadaver Trials
 figure(3); clf(3); grid on; hold on; 
-title('Trimmed Cadaver Manual Trials N = 3');
-xlabel('Insertion Time (s)'); ylabel('Force (mN)');
+% title('Trimmed Cadaver Manual Trials N = 3');
+xlabel('Insertion Time (s)','FontWeight','bold'); 
+ylabel('Force (mN)','FontWeight','bold');
 xlim([0,max_manual_cadaverX]);
 ylim([0,max_manual_cadaverY]);
 
 for ii = 1:size(data_manual_cadaver,2)
     plot(data_manual_cadaver(ii).time_trimmed,...
          data_manual_cadaver(ii).Fmag_trimmed,...
-         'Color',colorsBlue(ii,:),'LineWidth',line_width_smooth);
+         'Color',colorsRed(ii,:),'LineWidth',line_width_raw,'LineStyle',...
+         line_style_mat{ii});
 end
 
-legend('Trial 1','Trial 2','Trial 3');
+legend('Trial 1','Trial 2','Trial 3','Location','northwest');
+set(0,'DefaultAxesFontSize',10);
+set(0,'DefaultAxesFontName','Arial');
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 3.6 2];
+saveas(fig,'saved figures\ManualCadavervs.Time.pdf');
 
 %% Plot 3: XYZ Plots using trimmed data
 figure(4); clf(4); hold on; grid on;
