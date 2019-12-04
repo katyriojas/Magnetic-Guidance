@@ -12,7 +12,7 @@
 % Last Updated: 11/21/19
 
 %% Regenerate Phantom data if requested
-regenerate_phantom_data = true;
+regenerate_phantom_data = false;
 
 % guided/unguided phantom data
 if regenerate_phantom_data

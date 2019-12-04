@@ -74,7 +74,8 @@ end
 
 angle_smooth_span = 20;
 
-video_base_path = 'C:\Users\riojaske\Documents\magsteer\Videos';
+% video_base_path = 'C:\Users\riojaske\Documents\magsteer\Videos';
+video_base_path = 'D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL';
 
 filepaths_robotic_phantom(1).nomag_mea.vid = fullfile(video_base_path, 'phantom_ug_mea1_trial1_1.25\trial1-ug-mea1-tracked.mp4');
 filepaths_robotic_phantom(1).mag.vid       = fullfile(video_base_path, 'phantom_g_mea1_trial1_1.25\trial1-guided-mea1-1.25-tracked.mp4');
