@@ -2,7 +2,7 @@
 % This script plots the averages from the robotic cadaver trials
 
 % Last Updated: 11/19/19
-regenerate_robotic_cadaver_data = false;
+regenerate_robotic_cadaver_data = true;
 
 if regenerate_robotic_cadaver_data
     LoadRALData_Robotic_Cadaver;
@@ -25,7 +25,7 @@ for ii = 1:size(data_robotic_cadaver,2)
 end
 
 %% Interpolate so that we have 
-xvec = linspace(0.02,min_robotic_cadaver_X,1000);
+xvec = linspace(0.02,min_robotic_cadaver_X,500);
 
 for ii = 1:size(data_robotic_cadaver,2)
     
@@ -52,8 +52,8 @@ std_mag = std(Fmag_cadaver_g);
 set(gca,'fontname','Arial');
 
 figure(1); clf(1); grid on; hold on;
-xlabel('Insertion Depth (mm)','FontWeight','bold'); 
-ylabel('Average Force (mN)','FontWeight','bold');
+xlabel('Insertion Depth (mm)','FontWeight','bold','FontSize',8,'FontName','Times'); 
+ylabel('Average Force (mN)','FontWeight','bold','FontSize',8,'FontName','Times');
 xlim([0,min_robotic_cadaver_X]);
 ylim([0,max_robotic_cadaver_Y]);
 
@@ -63,11 +63,9 @@ fill([xvec fliplr(xvec)],[Favg_nomag + std_nomag, fliplr(Favg_nomag-std_nomag)],
 h2 = plot(xvec, Favg_mag, 'Color', 'g', 'LineWidth',1,'LineStyle','-');
 fill([xvec fliplr(xvec)],[Favg_mag + std_mag, fliplr(Favg_mag-std_mag)],...
     'g','FaceAlpha',0.2,'LineStyle','none');
-legend([h1,h2],{'Robotic','Robotic & Magnetic Steering'},'Location','northwest');
+legend([h1,h2],{'Robotic','Robotic & Magnetic Steering'},'Location','northwest','FontSize',8,'FontName','Times');
 
-set(0,'DefaultAxesFontSize',10);
-set(0,'DefaultAxesFontName','Arial');
 fig = gcf;
 fig.PaperUnits = 'inches';
-fig.PaperPosition = [0 0 3.6 2];
+fig.PaperPosition = [0 0 3.75 1.5];
 saveas(fig,'saved figures\AvgCadavervs.LID.pdf');
