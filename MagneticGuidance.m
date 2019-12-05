@@ -552,8 +552,8 @@ scatter(params.ramp_start,params.Bmag_start*1000,5,'filled','MarkerFaceColor','k
 scatter(params.ramp_end,params.Bmag_end*1000,5,'filled','MarkerFaceColor','k','MarkerEdgeColor','k');
 ylim([0,100]);
 xlim([0,27]);
-xlabel('Distance Along Cochlea Path (mm)','FontSize',9,'FontName','Times','FontWeight','bold');
-ylabel({'Magnetic Field';'Magnitude (mT)'},'FontSize',9,'FontName','Times','FontWeight','bold');
+xlabel('Insertion Depth (mm)','FontSize',9,'FontName','Times','FontWeight','bold');
+ylabel('Magnetic Field Magnitude (mT)','FontSize',9,'FontName','Times','FontWeight','bold');
 
 
 h_Bmag_figure = gcf; 
