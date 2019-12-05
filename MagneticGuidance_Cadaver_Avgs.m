@@ -52,6 +52,7 @@ std_mag = std(Fmag_cadaver_g);
 set(gca,'fontname','Arial');
 
 figure(1); clf(1); grid on; hold on;
+set(gca,'FontSize',9,'FontName','Times');
 xlabel('Insertion Depth (mm)','FontWeight','bold','FontSize',8,'FontName','Times'); 
 ylabel('Average Force (mN)','FontWeight','bold','FontSize',8,'FontName','Times');
 xlim([0,min_robotic_cadaver_X]);

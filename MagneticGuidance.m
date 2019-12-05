@@ -32,7 +32,6 @@
 % magnetic_guidance_plan.yaml => coil currents and insertion depths
 %
 
-
 % clear all; clc; close all;
 addpath('stls','functions','omnimag parameters','rig_ppr_medial_path', 'preoperative plans');
 
@@ -44,8 +43,7 @@ params.align_st_with_mag = false;   % true => align y-axes of ST & magnet; false
 params.useLW = true;                % true => use lateral wall path for generating field vectors
 params.flip_magnet_polarity = true; % true => south out the tip
 params.ramp_field = true;           % true => use ramp function for magnetic field magnitudes
-params.export_data = true;         % true => create new folder and export generated data
-
+params.export_data = false;         % true => create new folder and export generated data
 
 params.ppr_filename = 'tbone4.ppr'; % PPR file location
 % params.ppr_filename = 'phantom1_preopPlan.ppr'; % PPR file location
@@ -57,7 +55,7 @@ params.medial_axis_filename = 'MedialAxis_Tbone4.txt'; % Medial axis file locati
 params.basal_pts = 40:80; % medial axis points to use when fitting basal plane
 
 
-params.side = 'R'; % Left or Right Ear
+params.side = 'L'; % Left or Right Ear
 
 load('path.mat'); % loads 'path' -> lateral wall path
 if strcmp(params.side,'L')
@@ -72,7 +70,7 @@ params.end_depth = 27; %[mm]
 
 params.insertion_speed = 1.25; % [mm/s] linear insertion speed
 
-params.st_offset_from_mag_surface = 15; % [mm] distance between ST center and Omnimagnet's surface
+params.st_offset_from_mag_surface = 16; % [mm] distance between ST center and Omnimagnet's surface
 
 
 % Position [mm] of scala tympani (center) in the Omnimagnet's coordinate frame
@@ -84,9 +82,9 @@ params.t_mag_st = [0; 84 + params.st_offset_from_mag_surface; 0];
 params.Bmag_const = 78e-3; % [T]  (used if params.ramp_field = false)
 
 params.Bmag_start = 70e-3; % [T] (used if params.ramp_field = true)
-params.ramp_start = 17;    % [mm] (along insertion depth)
-params.Bmag_end   = 90e-3; % [T]
-params.ramp_end   = 23;  % [mm] (along insertion depth)
+params.ramp_start = 16;    % [mm] (along insertion depth)
+params.Bmag_end   = 85e-3; % [T]
+params.ramp_end   = 22.5;  % [mm] (along insertion depth)
 
 
 % STL paths
@@ -402,7 +400,6 @@ text(insertion_depth(I.max_x_ind+mag.i_start),I.max_x, strcat('\leftarrow ', spr
 text(insertion_depth(I.min_X_ind+mag.i_start),I.min_X, strcat('\leftarrow ', sprintf('%.1f A', I.min_X)))
 title('Omnimagnet Coil Currents', 'FontSize',13)
 
-
 %%%
 % Omnimagnet coil temperatures
 h_ax(3) = subplot_er(3,2,5);
@@ -427,7 +424,6 @@ ylabel(['Temperature (' char(176) 'C)']);
 title('Omnimagnet Coil Temperatures', 'FontSize',13)
 
 linkaxes(h_ax, 'x');
-
 
 %%%
 % 3D, scala tympani frame
@@ -527,3 +523,41 @@ if params.export_data
     export_data2ros(insertion_depth(mag.on), currents.scaled(:,mag.on), yamlFileID);
     
 end
+
+%% Generate plan plot
+figure(22); clf(22); 
+grid on; hold on;
+set(gca,'FontSize',9,'FontName','Times');
+
+plot(insertion_depth, currents.scaled(1,:), 'LineWidth',1.5,'Color','r')
+plot(insertion_depth, currents.scaled(2,:), 'LineWidth',1.5,'Color','g')
+plot(insertion_depth, currents.scaled(3,:), 'LineWidth',1.5,'Color','b')
+
+legend('Ix','Iy','Iz', 'Location','nw','FontSize',9,'FontName','Times'); 
+xlim([0,27]);
+xlabel('Distance Along Cochlea Path (mm)','FontSize',9,'FontName','Times','FontWeight','bold');
+ylabel('Current (A)','FontSize',9,'FontName','Times','FontWeight','bold');
+
+h_currents_figure = gcf; 
+h_currents_figure.PaperUnits = 'inches';
+h_currents_figure.PaperSize = [8.5 11];
+h_currents_figure.PaperPosition = [0 0 3.5 1];
+saveas(h_currents_figure,'saved figures\currents_plan.pdf');
+
+figure(23); clf(23); grid on; hold on;
+set(gca,'FontSize',9,'FontName','Times');
+plot(insertion_depth, Bmag*1e3, 'Color','k','LineWidth',1.5);
+scatter(params.start_depth,params.Bmag_start*1000,5,'filled','MarkerFaceColor','k','MarkerEdgeColor','k');
+scatter(params.ramp_start,params.Bmag_start*1000,5,'filled','MarkerFaceColor','k','MarkerEdgeColor','k');
+scatter(params.ramp_end,params.Bmag_end*1000,5,'filled','MarkerFaceColor','k','MarkerEdgeColor','k');
+ylim([0,100]);
+xlim([0,27]);
+xlabel('Distance Along Cochlea Path (mm)','FontSize',9,'FontName','Times','FontWeight','bold');
+ylabel({'Magnetic Field';'Magnitude (mT)'},'FontSize',9,'FontName','Times','FontWeight','bold');
+
+
+h_Bmag_figure = gcf; 
+h_Bmag_figure.PaperUnits = 'inches';
+h_Bmag_figure.PaperSize = [8.5 11];
+h_Bmag_figure.PaperPosition = [0 0 3.5 1];
+saveas(h_Bmag_figure,'saved figures\Bmag_plan.pdf');

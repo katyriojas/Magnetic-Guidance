@@ -158,6 +158,7 @@ xlabel('Insertion Time (s)','FontWeight','bold','FontSize',8,'FontName','Times')
 ylabel('Force (mN)','FontWeight','bold','FontSize',8,'FontName','Times');
 xlim([0,max_manual_cadaverX]);
 ylim([0,max_manual_cadaverY]);
+set(gca,'FontSize',9,'FontName','Times');
 
 for ii = 1:size(data_manual_cadaver,2)
     plot(data_manual_cadaver(ii).time_trimmed,...
