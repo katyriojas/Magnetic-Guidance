@@ -144,7 +144,7 @@ data_robotic_phantom(3).nomag_mea_interp_angdepth = ...
 
 %% Binning
 
-degspan = 2; % [deg] span/width of each bin
+degspan = 3; % [deg] span/width of each bin
 
 % compute the largest angular insertion depth to bound our bins
 max_ang = 0;

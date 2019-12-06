@@ -49,11 +49,11 @@ for ii = 1:length(data_manual_phantom)
         smooth(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle, smooth_span, 'sgolay', 1)';
 end
 
-% verify smoothing
-% figure; hold on; grid on;
-% ii=1;
-% plot(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle, '--'); 
-% plot(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle_smooth)
+%% verify smoothing
+figure; hold on; grid on;
+ii=1;
+plot(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle, '--'); 
+plot(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle_smooth)
 
 
 %% Interpolate force points at trimmed points

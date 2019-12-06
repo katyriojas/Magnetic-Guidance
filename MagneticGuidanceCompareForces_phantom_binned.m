@@ -63,13 +63,14 @@ for i_bin = 1:length(phantom_stats.Fmag.bins)
     phantom_stats.Fmag.std.manual(i_bin) = std(manual_binned(i_bin).Fmags);
 
     % perform t-test to determine if mean force with magnet is less than without
-%     if (~isnan(phantom_stats.Fmag.mean.mag(i_bin)) && ~isnan(phantom_stats.Fmag.mean.nomag(i_bin)) ) % must have values for both
-        [phantom_stats.Fmag.diff.h(i_bin),  phantom_stats.Fmag.diff.p(i_bin), phantom_stats.Fmag.diff.ci(i_bin,:)] = ...
-            ttest2( mag_binned(i_bin).Fmags, nomag_mea_binned(i_bin).Fmags, 'Tail','left', 'Vartype','unequal');
+    [phantom_stats.Fmag.diff.h(i_bin),  phantom_stats.Fmag.diff.p(i_bin), phantom_stats.Fmag.diff.ci(i_bin,:)] = ...
+            ttest2( mag_binned(i_bin).Fmags, nomag_mea_binned(i_bin).Fmags, 'Tail','left', 'Vartype','unequal', 'Alpha', 0.01);
 
-        % compute mean difference between manual/robotic
-        phantom_stats.Fmag.diff.mean(i_bin) = phantom_stats.Fmag.mean.mag(i_bin) - phantom_stats.Fmag.mean.nomag(i_bin);
-%     end
+    % compute mean difference between manual/robotic
+    phantom_stats.Fmag.diff.mean(i_bin) = phantom_stats.Fmag.mean.mag(i_bin) - phantom_stats.Fmag.mean.nomag(i_bin);
+
+    % compute RMS standard deviation of the difference
+    phantom_stats.Fmag.diff.std(i_bin) = sqrt( phantom_stats.Fmag.std.nomag(i_bin)^2 + phantom_stats.Fmag.std.mag(i_bin)^2);
 
 end
 
@@ -120,8 +121,10 @@ end
 hf_avg_binned = figure;
 hf_avg_binned.WindowState = "maximized";
 
+
 h_ax(1) = subplot_er(2,1,1);
 grid on; hold on; %xlim([0 400]);
+title(strcat(sprintf('Mean Forces in Phantom (Bin Size = %i', phantom_stats.Fmag.bins(2)-phantom_stats.Fmag.bins(1)), '\circ)'))
 
 % plot means
 plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.manual, 'Color', 'r','LineWidth',1.5);
@@ -158,21 +161,41 @@ end
 
 ylabel('||F|| (mN)');
 legend('Manual','Robotic','Robotic & Magnetic Steering', 'Location','nw');
+% ylim([-10, h_ax(1).YLim(2)])
+ylim([0 120])
 
-
-
+% Plot delta F between guided/unguided robotic insertion means
 h_ax(2) = subplot_er(2,1,2);
 grid on; hold on;
-xlabel('Angular Insertion Depth (\circ)'); 
-ylabel('\Delta ||F|| (mN)');
+
+% delta F
 not_nan = ~isnan(phantom_stats.Fmag.diff.mean);
 plot(phantom_stats.Fmag.bins(not_nan), phantom_stats.Fmag.diff.mean(not_nan), 'Color', 'k','LineWidth',1.5);
-area(phantom_stats.Fmag.bins(not_nan), phantom_stats.Fmag.diff.mean(not_nan), 'FaceColor',[0,0,0], 'FaceAlpha',0.05, 'EdgeColor','none');
+
+% standard deviation
+% range = find(~isnan(phantom_stats.Fmag.mean.manual),1) : (length(phantom_stats.Fmag.bins) - find(~isnan( fliplr(phantom_stats.Fmag.mean.manual)),1)); 
+fill([phantom_stats.Fmag.bins(not_nan), fliplr(phantom_stats.Fmag.bins(not_nan))],...
+     [phantom_stats.Fmag.diff.mean(not_nan) + phantom_stats.Fmag.diff.std(not_nan), fliplr(phantom_stats.Fmag.diff.mean(not_nan) - phantom_stats.Fmag.diff.std(not_nan))],...
+     'k', 'FaceAlpha',0.15, 'EdgeColor','none');
+
+% area(phantom_stats.Fmag.bins(not_nan), phantom_stats.Fmag.diff.mean(not_nan), 'FaceColor',[0,0,0], 'FaceAlpha',0.05, 'EdgeColor','none');
+
+% mark t-test significant points
 scatter(phantom_stats.Fmag.bins(phantom_stats.Fmag.diff.h), phantom_stats.Fmag.diff.mean(phantom_stats.Fmag.diff.h), 100, 'm', '*')
 
+xlabel('Angular Insertion Depth (\circ)'); 
+ylabel('\Delta ||F|| (mN)');
 
 linkaxes(h_ax, 'x');
-xlim([0, phantom_stats.Fmag.bins(end)])
+% xlim([0, phantom_stats.Fmag.bins(end)+10])
+xlim([0,400])
+ylim([min(phantom_stats.Fmag.diff.mean(not_nan) - phantom_stats.Fmag.diff.std(not_nan) - 10), max(phantom_stats.Fmag.diff.mean(not_nan) + phantom_stats.Fmag.diff.std(not_nan) + 10)]) 
+
+
+%% Plot p-values from t-test
+% figure(20); clf(20);
+% bar(phantom_stats.Fmag.bins, phantom_stats.Fmag.diff.p)
+
 
 %% Update Saved Phantom Data if it is called for
 % if update_saved_phantom_structs
