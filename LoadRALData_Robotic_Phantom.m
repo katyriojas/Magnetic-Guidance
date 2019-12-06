@@ -13,6 +13,8 @@
 
 update_saved_phantom_data = true; % default is true - update saved.mat after regenerating
 
+
+%%
 addpath('classDef','functions','data');
 load('avg_cal_slopes.mat'); % loads cal_slopes
 base_path = 'data\phantom\';
@@ -74,7 +76,8 @@ end
 
 angle_smooth_span = 20;
 
-video_base_path = 'C:\Users\riojaske\Documents\magsteer\Videos';
+% video_base_path = 'C:\Users\riojaske\Documents\magsteer\Videos';
+video_base_path = 'D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL';
 
 filepaths_robotic_phantom(1).nomag_mea.vid = fullfile(video_base_path, 'phantom_ug_mea1_trial1_1.25\trial1-ug-mea1-tracked.mp4');
 filepaths_robotic_phantom(1).mag.vid       = fullfile(video_base_path, 'phantom_g_mea1_trial1_1.25\trial1-guided-mea1-1.25-tracked.mp4');
@@ -109,6 +112,7 @@ for ii = 1:length(filepaths_robotic_phantom)
 
 end
 
+
 %% Use nomag trial 4 to fill remainder of nomag trial 3
 
 % trial 3 data until stop point
@@ -136,6 +140,53 @@ nomag3_insertion_depths = linspace(data_robotic_phantom(3).nomag_mea.depth_inser
 data_robotic_phantom(3).nomag_mea_interp_angdepth = ...
     interp1(nomag3_insertion_depths,nomag3_interp_angdepth,...
             data_robotic_phantom(3).nomag_mea.depth_insertion, 'linear', 'extrap');
+
+
+%% Binning
+
+degspan = 3; % [deg] span/width of each bin
+
+% compute the largest angular insertion depth to bound our bins
+max_ang = 0;
+for ii = 1:length(data_robotic_phantom)
+    max_ang = max([max_ang,...
+                   max(data_robotic_phantom(ii).nomag_mea_interp_angdepth),...
+                   max(data_robotic_phantom(ii).mag_interp_angdepth)]);
+end
+num_bins = ceil(max_ang/degspan);           
+
+% create vector of the bin edges
+bin_edges = 0:degspan:num_bins*degspan;
+
+% create vector of the bin centers
+bins = bin_edges(2:end) - degspan/2;
+
+% sort into bins
+for ii = 1:length(data_robotic_phantom)
+
+    % determine the bin for each interp_angdepth point
+    [~,~,data_robotic_phantom(ii).nomag_mea_binned.ind] = histcounts(data_robotic_phantom(ii).nomag_mea_interp_angdepth, bin_edges);
+    [~,~,data_robotic_phantom(ii).mag_binned.ind]       = histcounts(data_robotic_phantom(ii).mag_interp_angdepth, bin_edges);
+
+    % compute mean of all the force measurements within each bin (NaN for bins with no measurements)
+    data_robotic_phantom(ii).nomag_mea_binned.Fmean = zeros(size(bins));
+    data_robotic_phantom(ii).mag_binned.Fmean = zeros(size(bins));
+    for jj = 1:length(bins)
+        data_robotic_phantom(ii).nomag_mea_binned.Fmean(jj) = ...
+            mean( data_robotic_phantom(ii).nomag_mea.Fmag( data_robotic_phantom(ii).nomag_mea_binned.ind == jj ) );
+
+        data_robotic_phantom(ii).mag_binned.Fmean(jj) = ...
+            mean( data_robotic_phantom(ii).mag.Fmag( data_robotic_phantom(ii).mag_binned.ind == jj ) );
+    end
+    
+    % also save the actual bins and edges
+    data_robotic_phantom(ii).nomag_mea_binned.bins  = bins;
+    data_robotic_phantom(ii).nomag_mea_binned.edges = bin_edges;
+    data_robotic_phantom(ii).mag_binned.bins  = bins;
+    data_robotic_phantom(ii).mag_binned.edges = bin_edges;
+end
+
+
 
 %% Update Saved Phantom Data if it is called for
 if update_saved_phantom_data

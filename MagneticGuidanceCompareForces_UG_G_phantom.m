@@ -12,7 +12,7 @@
 % Last Updated: 11/21/19
 
 %% Regenerate Phantom data if requested
-regenerate_phantom_data = true;
+regenerate_phantom_data = false;
 
 % guided/unguided phantom data
 if regenerate_phantom_data
@@ -104,7 +104,7 @@ legend([h(1).nomag,h(1).mag,], [{'UG-Fx','UG-FY','UG-Fz'},{'G-Fx', 'G-Fy', 'G-Fz
 %% Plot the AID vs. LID to make sure that seemed reasonable.
 figure(3); clf(3); hold on; grid on;
 
-for ii = 1:size(data_robotic_phantom,2)
+for ii = 1:length(data_robotic_phantom)
     
     h_nomag(ii) = plot(data_robotic_phantom(ii).nomag_mea.depth_insertion,...
                        data_robotic_phantom(ii).nomag_mea_interp_angdepth,...
@@ -127,20 +127,38 @@ legend([h_nomag(1:ii),h_mag(1:ii)], [labels.nomag(1:ii),labels.mag(1:ii)], 'Loca
 figure(4); clf(4);
 hold on; grid on;
 
-for ii=1:size(data_robotic_phantom,2)
+for ii=1:length(data_robotic_phantom)
    
     % Plot Unguided Fmag
                 plot(data_robotic_phantom(ii).nomag_mea_interp_angdepth, data_robotic_phantom(ii).nomag_mea.Fmag,...
-                'Color', [colors(ii,:), 0.3], 'LineWidth', 1, 'LineStyle',':', 'LineWidth', line_width_raw);
+                'Color', [colors(ii,:), 0.3], 'LineStyle',':', 'LineWidth', line_width_raw);
     h_nomag(ii) = plot(data_robotic_phantom(ii).nomag_mea_interp_angdepth, data_robotic_phantom(ii).nomag_mea.Fmag_smooth,...
-                'Color', [colors(ii,:), 1],   'LineWidth', 1, 'LineStyle',':', 'LineWidth', line_width_smooth);
+                'Color', [colors(ii,:), 1],   'LineStyle',':', 'LineWidth', line_width_smooth);
+
+    % find NaN indices (i.e. angles without force measurements)
+    nan_inds = isnan(data_robotic_phantom(ii).nomag_mea_binned.Fmean);
+
+    % plot Fmean for each bin
+%     scatter(data_robotic_phantom(ii).nomag_mea_binned.bins(~nan_inds), data_robotic_phantom(ii).nomag_mea_binned.Fmean(~nan_inds),...
+%         'Marker','*', 'MarkerEdgeColor', colors(ii,:));   
+    plot(data_robotic_phantom(ii).nomag_mea_binned.bins(~nan_inds), data_robotic_phantom(ii).nomag_mea_binned.Fmean(~nan_inds),...
+        'Color', [colors(ii,:), 1],   'LineStyle',':', 'LineWidth', 1.5);
     
+
     % Plot guided Fmag
                 plot(data_robotic_phantom(ii).mag_interp_angdepth, data_robotic_phantom(ii).mag.Fmag,...
                 'Color', [colors(ii,:), 0.3], 'LineWidth', line_width_raw);
     h_mag(ii) = plot(data_robotic_phantom(ii).mag_interp_angdepth, data_robotic_phantom(ii).mag.Fmag_smooth,...
                 'Color', [colors(ii,:), 1], 'LineWidth', line_width_smooth);
-    
+
+    % find NaN indices (i.e. angles without force measurements)
+    nan_inds = isnan(data_robotic_phantom(ii).mag_binned.Fmean);
+
+    % plot Fmean for each bin
+%     scatter(data_robotic_phantom(ii).mag_binned.bins(~nan_inds), data_robotic_phantom(ii).mag_binned.Fmean(~nan_inds),...
+%         'Marker','*', 'MarkerEdgeColor', colors(ii,:));
+    plot(data_robotic_phantom(ii).mag_binned.bins(~nan_inds), data_robotic_phantom(ii).mag_binned.Fmean(~nan_inds),...
+        'Color', [colors(ii,:), 1], 'LineWidth', 1.5); 
 end
 
 title('Force vs Angular Insertion Depth')

@@ -11,7 +11,7 @@
 
 
 %% Regenerate data if requested
-regenerate_manual_data = true;
+regenerate_manual_data = false;
 
 if regenerate_manual_data
     LoadRALData_Manual; % regen data

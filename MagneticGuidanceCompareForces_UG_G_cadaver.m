@@ -9,7 +9,7 @@
 % Last Updated: 11/21/19
 
 %% Regenerate data if requested
-regenerate_robotic_cadaver_data = true;
+regenerate_robotic_cadaver_data = false;
 
 if regenerate_robotic_cadaver_data
     LoadRALData_Robotic_Cadaver;
