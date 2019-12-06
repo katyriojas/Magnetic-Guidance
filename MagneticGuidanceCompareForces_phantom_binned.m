@@ -24,116 +24,158 @@ if regenerate_phantom_data
 elseif ~exist('data_robotic_phantom','var') % if not already loaded
     load('data\phantom\data_robotic_phantom.mat'); % load already generated
 end
-%% Initialize Variables for Binning and Plotting Data
-% First compute the largest angular insertion depth to bound our bins
-max_binnedX = 0;
-for ii = 1:size(data_manual_phantom,2)
-    max_binnedX = max([max_binnedX,...
-                       max(data_manual_phantom(ii).interp_angdepth),...
-                       max(data_robotic_phantom(ii).nomag_mea_interp_angdepth),...
-                       max(data_robotic_phantom(ii).mag_interp_angdepth)]);
+
+
+%% Combine binned force measurements for each set of trials and compute statistics
+
+clear phantom_stats;
+
+phantom_stats.Fmag.bins = data_robotic_phantom(1).mag_binned.bins;
+for i_bin = 1:length(phantom_stats.Fmag.bins)
+    
+    % create vectors containing all force measurements within the corresponding bin
+    nomag_mea_binned(i_bin).Fmags = [];
+    mag_binned(i_bin).Fmags = [];
+    for i_trial = 1:length(data_robotic_phantom)
+        % append forces from current trial
+        nomag_mea_binned(i_bin).Fmags = [nomag_mea_binned(i_bin).Fmags; ...
+                                      data_robotic_phantom(i_trial).nomag_mea.Fmag(data_robotic_phantom(i_trial).nomag_mea_binned.ind == i_bin)];
+
+        mag_binned(i_bin).Fmags = [mag_binned(i_bin).Fmags; ...
+                                data_robotic_phantom(i_trial).mag.Fmag(data_robotic_phantom(i_trial).mag_binned.ind == i_bin)];
+    end
+
+    manual_binned(i_bin).Fmags = [];
+    for i_trial = 1:length(data_manual_phantom)
+        % append forces from current trial
+        manual_binned(i_bin).Fmags = [manual_binned(i_bin).Fmags; ...
+                                      data_manual_phantom(i_trial).Fmag_trimmed(data_manual_phantom(i_trial).binned.ind == i_bin)];
+    end
+    
+    % compute mean for current bin
+    phantom_stats.Fmag.mean.nomag(i_bin)  = mean(nomag_mea_binned(i_bin).Fmags);
+    phantom_stats.Fmag.mean.mag(i_bin)    = mean(mag_binned(i_bin).Fmags);
+    phantom_stats.Fmag.mean.manual(i_bin) = mean(manual_binned(i_bin).Fmags);
+
+    % compute standard deviation
+    phantom_stats.Fmag.std.nomag(i_bin)  = std(nomag_mea_binned(i_bin).Fmags);
+    phantom_stats.Fmag.std.mag(i_bin)    = std(mag_binned(i_bin).Fmags);
+    phantom_stats.Fmag.std.manual(i_bin) = std(manual_binned(i_bin).Fmags);
+
+    % perform t-test to determine if mean force with magnet is less than without
+%     if (~isnan(phantom_stats.Fmag.mean.mag(i_bin)) && ~isnan(phantom_stats.Fmag.mean.nomag(i_bin)) ) % must have values for both
+        [phantom_stats.Fmag.diff.h(i_bin),  phantom_stats.Fmag.diff.p(i_bin), phantom_stats.Fmag.diff.ci(i_bin,:)] = ...
+            ttest2( mag_binned(i_bin).Fmags, nomag_mea_binned(i_bin).Fmags, 'Tail','left', 'Vartype','unequal');
+
+        % compute mean difference between manual/robotic
+        phantom_stats.Fmag.diff.mean(i_bin) = phantom_stats.Fmag.mean.mag(i_bin) - phantom_stats.Fmag.mean.nomag(i_bin);
+%     end
+
 end
 
-degspan = 1;
-stepsize = 1; 
-numsteps = ceil(max_binnedX/degspan);           
-AOIvec = linspace(0,max_binnedX,numsteps); % this is our vector of interest
+% remove NaNs and convert to logicals
+phantom_stats.Fmag.diff.h(isnan(phantom_stats.Fmag.diff.h)) = 0;
+phantom_stats.Fmag.diff.h = logical(phantom_stats.Fmag.diff.h);
 
-%% Intialize our vectors to be used later
-% Outputs from this loop should be both the binned individual trials, as
-% well as the average binned data
-manual_binnedFmag = zeros(length(AOIvec),4);
-robotic_ug_binnedFmag = zeros(length(AOIvec),4);
-robotic_g_binnedFmag = zeros(length(AOIvec),4);
+%% Check Data Fits
+% figure(2); clf(2);
+% sgtitle('Binned Phantom Data Check');
+% subplot(1,3,1); grid on; hold on;
+% title('Manual Insertions');
+% for i_bin = 1:size(data_manual_phantom,2)
+%     plot(data_manual_phantom(i_bin).interp_angdepth,...
+%          data_manual_phantom(i_bin).Fmag_trimmed,...
+%          'Color','b','LineWidth',1,'LineStyle',':');
+%     plot(AOIvec-degspan/2, manual_binnedFmag_avg,...
+%          'Color', 'k','LineWidth',1,'LineStyle','-');
+% end
+% 
+% subplot(1,3,2); grid on; hold on;
+% title('UG Robotic Insertions');
+% for i_bin = 1:size(data_robotic_phantom,2)
+%     plot(data_robotic_phantom(i_bin).nomag_mea_interp_angdepth,...
+%          data_robotic_phantom(i_bin).nomag_mea.Fmag,...
+%          'Color','b','LineWidth',1,'LineStyle',':');
+%     plot(AOIvec-degspan/2, robotic_ug_binnedFmag_avg,...
+%          'Color', 'k','LineWidth',1,'LineStyle','-');
+% end
+% 
+% subplot(1,3,3); grid on; hold on;
+% title('G Robotic Insertions');
+% for i_bin = 1:size(data_robotic_phantom,2)
+%     plot(data_robotic_phantom(i_bin).mag_interp_angdepth,...
+%          data_robotic_phantom(i_bin).mag.Fmag,...
+%          'Color','b','LineWidth',1,'LineStyle',':');
+%     plot(AOIvec-degspan/2, robotic_g_binnedFmag_avg,...
+%          'Color', 'k','LineWidth',1,'LineStyle','-');
+% end
 
-for ii = 2:length(AOIvec)
-    for jj = 1:size(data_manual_phantom,2)
-        % Find the manual data points
-        idxman = find((data_manual_phantom(jj).interp_angdepth<AOIvec(ii))&...
-                      (data_manual_phantom(jj).interp_angdepth>AOIvec(ii-1)));
-        Fmag_manual_jj = data_manual_phantom(jj).Fmag_trimmed(idxman);
-        manual_binnedFmag(ii,jj) = mean(Fmag_manual_jj);
-        
-        % Find phantom UG data points in bins
-        idxug = find((data_robotic_phantom(jj).nomag_mea_interp_angdepth<AOIvec(ii))&...
-                     (data_robotic_phantom(jj).nomag_mea_interp_angdepth>AOIvec(ii-1)));
-        Fmag_robotic_nomag_jj = data_robotic_phantom(jj).nomag_mea.Fmag(idxug);
-        robotic_ug_binnedFmag(ii,jj) = mean(Fmag_robotic_nomag_jj);
-        
-        % Find phantom G data points in bins
-        idxg = find((data_robotic_phantom(jj).mag_interp_angdepth<AOIvec(ii))&...
-                     (data_robotic_phantom(jj).mag_interp_angdepth>AOIvec(ii-1)));
-        Fmag_robotic_mag_jj = data_robotic_phantom(jj).mag.Fmag(idxg);
-        robotic_g_binnedFmag(ii,jj) = mean(Fmag_robotic_mag_jj);
+%% Plot average data comparison
+if exist('hf_avg_binned','var')
+    if isvalid(hf_avg_binned)
+        close(hf_avg_binned)
     end
 end
 
-% Save data and check for nans
-for jj = 1:size(data_manual_phantom,2)
-    binned_man_jj = [AOIvec',manual_binnedFmag(:,jj)];
-    binned_man_jj(any(isnan(binned_man_jj),2),:) = [];
-    data_manual_phantom(jj).binned.angle = binned_man_jj(:,1);
-    data_manual_phantom(jj).binned.Fmag = binned_man_jj(:,2);
-    
-    binned_ug_jj = [AOIvec',robotic_ug_binnedFmag(:,jj)];
-    binned_ug_jj(any(isnan(binned_ug_jj),2),:) = [];
-    data_robotic_phantom(jj).nomag_mea_binned.angle = binned_ug_jj(:,1);
-    data_robotic_phantom(jj).nomag_mea_binned.Fmag = binned_ug_jj(:,2);
-    
-    binned_g_jj = [AOIvec',robotic_g_binnedFmag(:,jj)];
-    binned_g_jj(any(isnan(binned_g_jj),2),:) = [];
-    data_robotic_phantom(jj).mag_binned.angle = binned_g_jj(:,1);
-    data_robotic_phantom(jj).mag_binned.Fmag = binned_g_jj(:,2);
+hf_avg_binned = figure;
+hf_avg_binned.WindowState = "maximized";
+
+h_ax(1) = subplot_er(2,1,1);
+grid on; hold on; %xlim([0 400]);
+
+% plot means
+plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.manual, 'Color', 'r','LineWidth',1.5);
+plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.nomag,  'Color', 'b','LineWidth',1.5);
+plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.mag,    'Color', 'g','LineWidth',1.5);
+
+% plot standard deviations as shaded regions around means
+range = find(~isnan(phantom_stats.Fmag.mean.manual),1) : (length(phantom_stats.Fmag.bins) - find(~isnan( fliplr(phantom_stats.Fmag.mean.manual)),1)); 
+fill([phantom_stats.Fmag.bins(range), fliplr(phantom_stats.Fmag.bins(range))],...
+     [phantom_stats.Fmag.mean.manual(range) + phantom_stats.Fmag.std.manual(range), fliplr(phantom_stats.Fmag.mean.manual(range) - phantom_stats.Fmag.std.manual(range))],...
+     'r', 'FaceAlpha',0.15, 'EdgeColor','none');
+
+range = find(~isnan(phantom_stats.Fmag.mean.nomag),1) : (length(phantom_stats.Fmag.bins) - find(~isnan( fliplr(phantom_stats.Fmag.mean.nomag)),1)); 
+fill([phantom_stats.Fmag.bins(range), fliplr(phantom_stats.Fmag.bins(range))],...
+     [phantom_stats.Fmag.mean.nomag(range) + phantom_stats.Fmag.std.nomag(range), fliplr(phantom_stats.Fmag.mean.nomag(range) - phantom_stats.Fmag.std.nomag(range))],...
+     'b', 'FaceAlpha',0.15, 'EdgeColor','none');
+
+range = find(~isnan(phantom_stats.Fmag.mean.mag),1) : (length(phantom_stats.Fmag.bins) - find(~isnan( fliplr(phantom_stats.Fmag.mean.mag)),1)); 
+fill([phantom_stats.Fmag.bins(range), fliplr(phantom_stats.Fmag.bins(range))],...
+     [phantom_stats.Fmag.mean.mag(range) + phantom_stats.Fmag.std.mag(range), fliplr(phantom_stats.Fmag.mean.mag(range) - phantom_stats.Fmag.std.mag(range))],...
+     'g', 'FaceAlpha',0.15, 'EdgeColor','none');
+
+% mark trial end depths
+for i_trial = 1:length(data_robotic_phantom)
+    last_ind = data_manual_phantom(i_trial).binned.ind(end);
+    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.manual(last_ind), 100, 'r', 'd', 'filled');
+
+    last_ind = data_robotic_phantom(i_trial).nomag_mea_binned.ind(end);
+    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.nomag(last_ind),  100, 'b', 'd', 'filled');
+
+    last_ind = data_robotic_phantom(i_trial).mag_binned.ind(end-1); % TODO: fix NaN in interp_angdepth
+    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.mag(last_ind),    100, 'g', 'd', 'filled');
 end
 
-% Find Binned means
-manual_binnedFmag_avg     =  nanmean(manual_binnedFmag,2);
-robotic_ug_binnedFmag_avg =  nanmean(robotic_ug_binnedFmag,2);
-robotic_g_binnedFmag_avg  =  nanmean(robotic_g_binnedFmag,2);
+ylabel('||F|| (mN)');
+legend('Manual','Robotic','Robotic & Magnetic Steering', 'Location','nw');
 
-%% Check Data Fits
-figure(2); clf(2);
-sgtitle('Binned Phantom Data Check');
-subplot(1,3,1); grid on; hold on;
-title('Manual Insertions');
-for ii = 1:size(data_manual_phantom,2)
-    plot(data_manual_phantom(ii).interp_angdepth,...
-         data_manual_phantom(ii).Fmag_trimmed,...
-         'Color','b','LineWidth',1,'LineStyle',':');
-    plot(AOIvec-degspan/2, manual_binnedFmag_avg,...
-         'Color', 'k','LineWidth',1,'LineStyle','-');
-end
 
-subplot(1,3,2); grid on; hold on;
-title('UG Robotic Insertions');
-for ii = 1:size(data_robotic_phantom,2)
-    plot(data_robotic_phantom(ii).nomag_mea_interp_angdepth,...
-         data_robotic_phantom(ii).nomag_mea.Fmag,...
-         'Color','b','LineWidth',1,'LineStyle',':');
-    plot(AOIvec-degspan/2, robotic_ug_binnedFmag_avg,...
-         'Color', 'k','LineWidth',1,'LineStyle','-');
-end
 
-subplot(1,3,3); grid on; hold on;
-title('G Robotic Insertions');
-for ii = 1:size(data_robotic_phantom,2)
-    plot(data_robotic_phantom(ii).mag_interp_angdepth,...
-         data_robotic_phantom(ii).mag.Fmag,...
-         'Color','b','LineWidth',1,'LineStyle',':');
-    plot(AOIvec-degspan/2, robotic_g_binnedFmag_avg,...
-         'Color', 'k','LineWidth',1,'LineStyle','-');
-end
+h_ax(2) = subplot_er(2,1,2);
+grid on; hold on;
+xlabel('Angular Insertion Depth (\circ)'); 
+ylabel('\Delta ||F|| (mN)');
+not_nan = ~isnan(phantom_stats.Fmag.diff.mean);
+plot(phantom_stats.Fmag.bins(not_nan), phantom_stats.Fmag.diff.mean(not_nan), 'Color', 'k','LineWidth',1.5);
+area(phantom_stats.Fmag.bins(not_nan), phantom_stats.Fmag.diff.mean(not_nan), 'FaceColor',[0,0,0], 'FaceAlpha',0.05, 'EdgeColor','none');
+scatter(phantom_stats.Fmag.bins(phantom_stats.Fmag.diff.h), phantom_stats.Fmag.diff.mean(phantom_stats.Fmag.diff.h), 100, 'm', '*')
 
-%% Plot average data comparison
-figure(1); clf(1); grid on; hold on; xlim([0 400]);
-xlabel('Angular Insertion Depth (\circ)'); ylabel('Average ||Force|| (mN)');
-plot(AOIvec-degspan/2, manual_binnedFmag_avg, 'Color', 'r','LineWidth',1,'LineStyle','-');
-plot(AOIvec-degspan/2, robotic_ug_binnedFmag_avg, 'Color', 'b','LineWidth',1,'LineStyle','-');
-plot(AOIvec-degspan/2, robotic_g_binnedFmag_avg, 'Color', 'g','LineWidth',1,'LineStyle','-');
-legend('Manual','Robotic','Robotic & Magnetic Steering');
+
+linkaxes(h_ax, 'x');
+xlim([0, phantom_stats.Fmag.bins(end)])
 
 %% Update Saved Phantom Data if it is called for
-if update_saved_phantom_structs
-   save('data\phantom\data_manual_phantom.mat','data_manual_phantom');
-   save('data\phantom\data_robotic_phantom.mat','data_robotic_phantom');
-end
+% if update_saved_phantom_structs
+%    save('data\phantom\data_manual_phantom.mat','data_manual_phantom');
+%    save('data\phantom\data_robotic_phantom.mat','data_robotic_phantom');
+% end

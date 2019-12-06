@@ -39,13 +39,25 @@ end
 
 %% Pull in phantom AID data (manually selected) 
 % Note only have this for phantom
-for ii = 1:length(filepaths_manual_phantom)
+for ii = 1:length(data_manual_phantom)
     load(strcat('data\phantom\manual\pman',num2str(ii),'_60fps_angular_depth.mat'));
     data_manual_phantom(ii).angular_depth = insertion_angle;
+
+    % fix smoothed angles
+    smooth_span = 50; % [samples]
+    data_manual_phantom(ii).angular_depth.angle_smooth = ...
+        smooth(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle, smooth_span, 'sgolay', 1)';
 end
 
+% verify smoothing
+% figure; hold on; grid on;
+% ii=1;
+% plot(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle, '--'); 
+% plot(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle_smooth)
+
+
 %% Interpolate force points at trimmed points
-for ii = 1:length(filepaths_manual_phantom)
+for ii = 1:length(data_manual_phantom)
  
     data_manual_phantom(ii).interp_angdepth = ...
         interp1(data_manual_phantom(ii).angular_depth.time,...
@@ -54,21 +66,44 @@ for ii = 1:length(filepaths_manual_phantom)
 end
 
 %% Add trimmed result to struct
-for ii = 1:length(filepaths_manual_phantom)
-    data_manual_phantom(ii).Fmag_trimmed = ...
-        data_manual_phantom(ii).nano.Fmag(phantom_trimmed(ii).indices);
-    data_manual_phantom(ii).time_trimmed = ...
-        phantom_trimmed(ii).time - phantom_trimmed(ii).time(1);
-    data_manual_phantom(ii).trim_idx = phantom_trimmed(ii).indices;
+for ii = 1:length(data_manual_phantom)
+    data_manual_phantom(ii).Fmag_trimmed = data_manual_phantom(ii).nano.Fmag(phantom_trimmed(ii).indices);
+    data_manual_phantom(ii).time_trimmed = phantom_trimmed(ii).time - phantom_trimmed(ii).time(1);
+    data_manual_phantom(ii).trim_idx     = phantom_trimmed(ii).indices;
 end
 
-for ii = 1:length(filepaths_manual_cadaver)
-    data_manual_cadaver(ii).Fmag_trimmed = ...
-        data_manual_cadaver(ii).nano.Fmag(cadaver_trimmed(ii).indices);
-    data_manual_cadaver(ii).time_trimmed = ...
-        cadaver_trimmed(ii).time - cadaver_trimmed(ii).time(1);
-    data_manual_cadaver(ii).trim_idx = cadaver_trimmed(ii).indices;
+for ii = 1:length(data_manual_cadaver)
+    data_manual_cadaver(ii).Fmag_trimmed = data_manual_cadaver(ii).nano.Fmag(cadaver_trimmed(ii).indices);
+    data_manual_cadaver(ii).time_trimmed = cadaver_trimmed(ii).time - cadaver_trimmed(ii).time(1);
+    data_manual_cadaver(ii).trim_idx     = cadaver_trimmed(ii).indices;
 end
+
+
+%% Binning
+
+% use same bins as robotic data
+if ~exist('data_robotic_phantom','var')
+    error('Must first run ''LoadRALData_Robotic_Phantom.m'' to generate bins')
+end
+
+% sort into bins
+for ii = 1:length(data_manual_phantom)
+
+    % determine the bin for each interp_angdepth point
+    [~,~,data_manual_phantom(ii).binned.ind] = histcounts(data_manual_phantom(ii).interp_angdepth, data_robotic_phantom(ii).mag_binned.edges);
+
+    % compute mean of all the force measurements within each bin (NaN for bins with no measurements)
+    data_manual_phantom(ii).binned.Fmean = zeros(size(bins));
+    for jj = 1:length(bins)
+        data_manual_phantom(ii).binned.Fmean(jj) = ...
+            mean( data_manual_phantom(ii).Fmag_trimmed( data_manual_phantom(ii).binned.ind == jj ) );
+    end
+    
+    % also save the actual bins and edges used
+    data_manual_phantom(ii).binned.bins  = bins;
+    data_manual_phantom(ii).binned.edges = bin_edges;
+end
+
 
 %% Update saved manual data if requested
 if update_saved_manual_data
