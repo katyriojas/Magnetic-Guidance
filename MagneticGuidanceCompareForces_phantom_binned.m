@@ -121,48 +121,50 @@ end
 hf_avg_binned = figure;
 hf_avg_binned.WindowState = "maximized";
 
+line_width = 2;
+alpha_std = 0.1;
 
 h_ax(1) = subplot_er(2,1,1);
 grid on; hold on; %xlim([0 400]);
 title(strcat(sprintf('Mean Forces in Phantom (Bin Size = %i', phantom_stats.Fmag.bins(2)-phantom_stats.Fmag.bins(1)), '\circ)'))
 
 % plot means
-plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.manual, 'Color', 'r','LineWidth',1.5);
-plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.nomag,  'Color', 'b','LineWidth',1.5);
-plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.mag,    'Color', 'g','LineWidth',1.5);
+plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.manual, 'Color', 'r','LineWidth',line_width);
+plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.nomag,  'Color', 'b','LineWidth',line_width);
+plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.mag,    'Color', 'g','LineWidth',line_width);
 
 % plot standard deviations as shaded regions around means
 range = find(~isnan(phantom_stats.Fmag.mean.manual),1) : (length(phantom_stats.Fmag.bins) - find(~isnan( fliplr(phantom_stats.Fmag.mean.manual)),1)); 
 fill([phantom_stats.Fmag.bins(range), fliplr(phantom_stats.Fmag.bins(range))],...
      [phantom_stats.Fmag.mean.manual(range) + phantom_stats.Fmag.std.manual(range), fliplr(phantom_stats.Fmag.mean.manual(range) - phantom_stats.Fmag.std.manual(range))],...
-     'r', 'FaceAlpha',0.15, 'EdgeColor','none');
+     'r', 'FaceAlpha',alpha_std, 'EdgeColor','none');
 
 range = find(~isnan(phantom_stats.Fmag.mean.nomag),1) : (length(phantom_stats.Fmag.bins) - find(~isnan( fliplr(phantom_stats.Fmag.mean.nomag)),1)); 
 fill([phantom_stats.Fmag.bins(range), fliplr(phantom_stats.Fmag.bins(range))],...
      [phantom_stats.Fmag.mean.nomag(range) + phantom_stats.Fmag.std.nomag(range), fliplr(phantom_stats.Fmag.mean.nomag(range) - phantom_stats.Fmag.std.nomag(range))],...
-     'b', 'FaceAlpha',0.15, 'EdgeColor','none');
+     'b', 'FaceAlpha',alpha_std, 'EdgeColor','none');
 
 range = find(~isnan(phantom_stats.Fmag.mean.mag),1) : (length(phantom_stats.Fmag.bins) - find(~isnan( fliplr(phantom_stats.Fmag.mean.mag)),1)); 
 fill([phantom_stats.Fmag.bins(range), fliplr(phantom_stats.Fmag.bins(range))],...
      [phantom_stats.Fmag.mean.mag(range) + phantom_stats.Fmag.std.mag(range), fliplr(phantom_stats.Fmag.mean.mag(range) - phantom_stats.Fmag.std.mag(range))],...
-     'g', 'FaceAlpha',0.15, 'EdgeColor','none');
+     'g', 'FaceAlpha',alpha_std, 'EdgeColor','none');
 
 % mark trial end depths
 for i_trial = 1:length(data_robotic_phantom)
     last_ind = data_manual_phantom(i_trial).binned.ind(end);
-    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.manual(last_ind), 100, 'r', 'd', 'filled');
+    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.manual(last_ind), 120, 'r', 'd', 'filled');
 
     last_ind = data_robotic_phantom(i_trial).nomag_mea_binned.ind(end);
-    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.nomag(last_ind),  100, 'b', 'd', 'filled');
+    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.nomag(last_ind),  120, 'b', 'd', 'filled');
 
     last_ind = data_robotic_phantom(i_trial).mag_binned.ind(end-1); % TODO: fix NaN in interp_angdepth
-    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.mag(last_ind),    100, 'g', 'd', 'filled');
+    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.mag(last_ind),    120, 'g', 'd', 'filled');
 end
 
 ylabel('||F|| (mN)');
 legend('Manual','Robotic','Robotic & Magnetic Steering', 'Location','nw');
-% ylim([-10, h_ax(1).YLim(2)])
-ylim([0 120])
+ylim([-10, h_ax(1).YLim(2)])
+% ylim([0 120])
 
 % Plot delta F between guided/unguided robotic insertion means
 h_ax(2) = subplot_er(2,1,2);
@@ -170,25 +172,25 @@ grid on; hold on;
 
 % delta F
 not_nan = ~isnan(phantom_stats.Fmag.diff.mean);
-plot(phantom_stats.Fmag.bins(not_nan), phantom_stats.Fmag.diff.mean(not_nan), 'Color', 'k','LineWidth',1.5);
+plot(phantom_stats.Fmag.bins(not_nan), phantom_stats.Fmag.diff.mean(not_nan), 'Color', 'k','LineWidth',line_width);
 
 % standard deviation
 % range = find(~isnan(phantom_stats.Fmag.mean.manual),1) : (length(phantom_stats.Fmag.bins) - find(~isnan( fliplr(phantom_stats.Fmag.mean.manual)),1)); 
 fill([phantom_stats.Fmag.bins(not_nan), fliplr(phantom_stats.Fmag.bins(not_nan))],...
      [phantom_stats.Fmag.diff.mean(not_nan) + phantom_stats.Fmag.diff.std(not_nan), fliplr(phantom_stats.Fmag.diff.mean(not_nan) - phantom_stats.Fmag.diff.std(not_nan))],...
-     'k', 'FaceAlpha',0.15, 'EdgeColor','none');
+     'k', 'FaceAlpha',alpha_std, 'EdgeColor','none');
 
 % area(phantom_stats.Fmag.bins(not_nan), phantom_stats.Fmag.diff.mean(not_nan), 'FaceColor',[0,0,0], 'FaceAlpha',0.05, 'EdgeColor','none');
 
 % mark t-test significant points
-scatter(phantom_stats.Fmag.bins(phantom_stats.Fmag.diff.h), phantom_stats.Fmag.diff.mean(phantom_stats.Fmag.diff.h), 100, 'm', '*')
+scatter(phantom_stats.Fmag.bins(phantom_stats.Fmag.diff.h), phantom_stats.Fmag.diff.mean(phantom_stats.Fmag.diff.h), 40, 'm', 'o', 'LineWidth',1.7)
 
 xlabel('Angular Insertion Depth (\circ)'); 
 ylabel('\Delta ||F|| (mN)');
 
 linkaxes(h_ax, 'x');
-% xlim([0, phantom_stats.Fmag.bins(end)+10])
-xlim([0,400])
+xlim([0, phantom_stats.Fmag.bins(end)+10])
+% xlim([0,400])
 ylim([min(phantom_stats.Fmag.diff.mean(not_nan) - phantom_stats.Fmag.diff.std(not_nan) - 10), max(phantom_stats.Fmag.diff.mean(not_nan) + phantom_stats.Fmag.diff.std(not_nan) + 10)]) 
 
 
