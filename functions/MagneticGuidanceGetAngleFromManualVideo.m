@@ -23,7 +23,7 @@ filename_save = strcat(folderpath_vid,'\pman4_60fps_angular_depth.mat');
 video_path = fullfile(folderpath_vid, filename_vid);
 
 % This should be equal to robotic phantom data if the frame rates are the same
-smooth_span = 40; % number of samples to smooth
+smooth_span = 50; % number of samples to smooth
 magnification = 300;
 
 % Load video and read first frame
@@ -96,7 +96,7 @@ end
 insertion_angle.angle = -(insertion_angle.angle-360);
 
 %% Smooth
-insertion_angle.angle_smooth = smooth(insertion_angle.time, insertion_angle.angle, smooth_span,'rloess')';
+insertion_angle.angle_smooth = smooth(insertion_angle.time,insertion_angle.angle, smooth_span, 'sgolay', 1)';
 
 %% Save
 save(filename_save,'insertion_angle');

@@ -11,12 +11,13 @@
 
 
 %% Regenerate data if requested
-regenerate_manual_data = false;
+regenerate_manual_data = true;
 
 if regenerate_manual_data
     LoadRALData_Manual; % regen data
 elseif ~exist('data_manual_phantom','var')
     load('data\phantom\data_manual_phantom.mat'); % load already generated
+    load('data\cadaver\data_manual_cadaver.mat'); 
 end
 
 %% Plotting Variables
@@ -42,7 +43,7 @@ max_manual_cadaverX = 0;
 
 % Use trimmed results for calculation
 % Calc max y phantom
-for ii = 1:length(filepaths_manual_phantom)
+for ii = 1:length(data_manual_phantom)
 %     max_manual_phantomX = max(max_manual_phantomX,max(data_manual_phantom(ii).nano.time));
 %     max_manual_phantomY = max(max_manual_phantomY,max(data_manual_phantom(ii).nano.Fmag));
     max_manual_phantomX = max(max_manual_phantomX,max(data_manual_phantom(ii).time_trimmed));
@@ -50,7 +51,7 @@ for ii = 1:length(filepaths_manual_phantom)
 end
 
 % Calc max y cadaver
-for ii = 1:length(filepaths_manual_cadaver)
+for ii = 1:length(data_manual_cadaver)
 %     max_manual_cadaverX = max(max_manual_cadaverX,max(data_manual_cadaver(ii).nano.time));
 %     max_manual_cadaverY = max(max_manual_cadaverY,max(data_manual_cadaver(ii).nano.Fmag));
     max_manual_cadaverX = max(max_manual_cadaverX,max(data_manual_cadaver(ii).time_trimmed));

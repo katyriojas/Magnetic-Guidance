@@ -43,7 +43,7 @@ for ii = 1:length(data_manual_phantom)
     load(strcat('data\phantom\manual\pman',num2str(ii),'_60fps_angular_depth.mat'));
     data_manual_phantom(ii).angular_depth = insertion_angle;
 
-    % fix smoothed angles
+%     fix smoothed angles
     smooth_span = 50; % [samples]
     data_manual_phantom(ii).angular_depth.angle_smooth = ...
         smooth(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle, smooth_span, 'sgolay', 1)';
