@@ -104,6 +104,14 @@ for ii = 1:length(data_manual_phantom)
     data_manual_phantom(ii).binned.edges = bin_edges;
 end
 
+%% Binning (Normalized Angular Depth)
+
+% Note: uses same threshold and number of bins as robotic data
+for ii = 1:length(data_robotic_phantom)
+    data_manual_phantom(ii).normbin_Fmag = MagneticGuidanceNormalizedBinning( ...
+        data_manual_phantom(ii).interp_angdepth, data_manual_phantom(ii).Fmag_trimmed, ang_bt, n_pre_bins, n_post_bins);
+
+end
 
 %% Update saved manual data if requested
 if update_saved_manual_data

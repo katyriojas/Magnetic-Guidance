@@ -123,6 +123,7 @@ labels.mag = {'mag1','mag2','mag3','mag4'};
 labels.nomag = {'nomag1','nomag2','nomag3','nomag4'};
 legend([h_nomag(1:ii),h_mag(1:ii)], [labels.nomag(1:ii),labels.mag(1:ii)], 'Location','nw')
 
+
 %% Plot Fmag vs. AID
 figure(4); clf(4);
 hold on; grid on;
@@ -169,6 +170,7 @@ clear labels;
 labels.mag = {'mag1','mag2','mag3','mag4'};
 labels.nomag = {'nomag1','nomag2','nomag3','nomag4'};
 legend([h_nomag(1:ii),h_mag(1:ii)], [labels.nomag(1:ii),labels.mag(1:ii)], 'Location','nw')
+
 
 %% Plot -> XYZ Force vs. Angular insertion depth
 figure(5); clf(5); 

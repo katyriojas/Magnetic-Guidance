@@ -4,10 +4,8 @@
 % colorbar plot
 
 % Trevor Bruns and Katy Riojas
-% Last Updated: 11/19/19
+% Last Updated: December 2019
 
-% TODO: Talk about whether to use smoothed or raw data (the plot generated
-% here looks slightly different because this uses the raw data)
 
 regenerate_manual_data = false;
 regenerate_phantom_data = false;
@@ -30,12 +28,18 @@ end
 
 clear phantom_stats;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Equal Width Bins (non-normalized) %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 phantom_stats.Fmag.bins = data_robotic_phantom(1).mag_binned.bins;
+
 for i_bin = 1:length(phantom_stats.Fmag.bins)
     
     % create vectors containing all force measurements within the corresponding bin
     nomag_mea_binned(i_bin).Fmags = [];
-    mag_binned(i_bin).Fmags = [];
+          mag_binned(i_bin).Fmags = [];
+
     for i_trial = 1:length(data_robotic_phantom)
         % append forces from current trial
         nomag_mea_binned(i_bin).Fmags = [nomag_mea_binned(i_bin).Fmags; ...
@@ -78,38 +82,212 @@ end
 phantom_stats.Fmag.diff.h(isnan(phantom_stats.Fmag.diff.h)) = 0;
 phantom_stats.Fmag.diff.h = logical(phantom_stats.Fmag.diff.h);
 
-%% Check Data Fits
-% figure(2); clf(2);
-% sgtitle('Binned Phantom Data Check');
-% subplot(1,3,1); grid on; hold on;
-% title('Manual Insertions');
-% for i_bin = 1:size(data_manual_phantom,2)
-%     plot(data_manual_phantom(i_bin).interp_angdepth,...
-%          data_manual_phantom(i_bin).Fmag_trimmed,...
-%          'Color','b','LineWidth',1,'LineStyle',':');
-%     plot(AOIvec-degspan/2, manual_binnedFmag_avg,...
-%          'Color', 'k','LineWidth',1,'LineStyle','-');
-% end
-% 
-% subplot(1,3,2); grid on; hold on;
-% title('UG Robotic Insertions');
-% for i_bin = 1:size(data_robotic_phantom,2)
-%     plot(data_robotic_phantom(i_bin).nomag_mea_interp_angdepth,...
-%          data_robotic_phantom(i_bin).nomag_mea.Fmag,...
-%          'Color','b','LineWidth',1,'LineStyle',':');
-%     plot(AOIvec-degspan/2, robotic_ug_binnedFmag_avg,...
-%          'Color', 'k','LineWidth',1,'LineStyle','-');
-% end
-% 
-% subplot(1,3,3); grid on; hold on;
-% title('G Robotic Insertions');
-% for i_bin = 1:size(data_robotic_phantom,2)
-%     plot(data_robotic_phantom(i_bin).mag_interp_angdepth,...
-%          data_robotic_phantom(i_bin).mag.Fmag,...
-%          'Color','b','LineWidth',1,'LineStyle',':');
-%     plot(AOIvec-degspan/2, robotic_g_binnedFmag_avg,...
-%          'Color', 'k','LineWidth',1,'LineStyle','-');
-% end
+
+%%%%%%%%%%%%%%%%%%%
+% Normalized Bins %
+%%%%%%%%%%%%%%%%%%%
+
+% before basal turn
+for i_bin = 1:n_pre_bins
+    
+    % create vectors containing all force measurements within the corresponding bin
+    nomag_normbin(i_bin).Fmags = [];
+      mag_normbin(i_bin).Fmags = [];
+
+    for i_trial = 1:length(data_robotic_phantom)
+        % append forces from current trial
+        nomag_normbin(i_bin).Fmags = [nomag_normbin(i_bin).Fmags; data_robotic_phantom(i_trial).nomag_normbin_Fmag.pre.vals{i_bin}];
+          mag_normbin(i_bin).Fmags = [mag_normbin(i_bin).Fmags;   data_robotic_phantom(i_trial).mag_normbin_Fmag.pre.vals{i_bin}];
+    end
+
+    manual_normbin(i_bin).Fmags = [];
+    for i_trial = 1:length(data_manual_phantom)
+        % append forces from current trial
+        manual_normbin(i_bin).Fmags = [manual_normbin(i_bin).Fmags; data_manual_phantom(i_trial).normbin_Fmag.pre.vals{i_bin}];
+    end
+    
+    % compute mean for current bin
+    phantom_stats.Fmag.normbin.mean.nomag(i_bin)  = mean(nomag_normbin(i_bin).Fmags);
+    phantom_stats.Fmag.normbin.mean.mag(i_bin)    = mean(mag_normbin(i_bin).Fmags);
+    phantom_stats.Fmag.normbin.mean.manual(i_bin) = mean(manual_normbin(i_bin).Fmags);
+
+    % compute standard deviation
+    phantom_stats.Fmag.normbin.std.nomag(i_bin)  = std(nomag_normbin(i_bin).Fmags);
+    phantom_stats.Fmag.normbin.std.mag(i_bin)    = std(mag_normbin(i_bin).Fmags);
+    phantom_stats.Fmag.normbin.std.manual(i_bin) = std(manual_normbin(i_bin).Fmags);
+
+    % perform t-test to determine if mean force with magnet is less than without
+    [phantom_stats.Fmag.normbin.diff.h(i_bin),  phantom_stats.Fmag.normbin.diff.p(i_bin), phantom_stats.Fmag.normbin.diff.ci(i_bin,:)] = ...
+            ttest2( mag_normbin(i_bin).Fmags, nomag_normbin(i_bin).Fmags, 'Tail','left', 'Vartype','unequal', 'Alpha', 0.01);
+
+    % compute mean difference between manual/robotic
+    phantom_stats.Fmag.normbin.diff.mean(i_bin) = phantom_stats.Fmag.normbin.std.mag(i_bin) - phantom_stats.Fmag.normbin.std.nomag(i_bin);
+
+    % compute RMS standard deviation of the difference
+    phantom_stats.Fmag.normbin.diff.std(i_bin) = sqrt( phantom_stats.Fmag.normbin.std.nomag(i_bin)^2 + phantom_stats.Fmag.normbin.std.mag(i_bin)^2);
+
+end
+
+% after basal turn
+for i_post_bin = 1:n_post_bins
+    
+    i_bin = n_pre_bins + i_post_bin;
+
+    % create vectors containing all force measurements within the corresponding bin
+    nomag_normbin(i_bin).Fmags = [];
+      mag_normbin(i_bin).Fmags = [];
+
+    for i_trial = 1:length(data_robotic_phantom)
+        % append forces from current trial
+        nomag_normbin(i_bin).Fmags = [nomag_normbin(i_bin).Fmags; data_robotic_phantom(i_trial).nomag_normbin_Fmag.post.vals{i_post_bin}];
+          mag_normbin(i_bin).Fmags = [mag_normbin(i_bin).Fmags;   data_robotic_phantom(i_trial).mag_normbin_Fmag.post.vals{i_post_bin}];
+    end
+
+    manual_normbin(i_bin).Fmags = [];
+    for i_trial = 1:length(data_manual_phantom)
+        % append forces from current trial
+        manual_normbin(i_bin).Fmags = [manual_normbin(i_bin).Fmags; data_manual_phantom(i_trial).normbin_Fmag.post.vals{i_post_bin}];
+    end
+    
+    % compute mean for current bin
+    phantom_stats.Fmag.normbin.mean.nomag(i_bin)  = mean(nomag_normbin(i_bin).Fmags);
+    phantom_stats.Fmag.normbin.mean.mag(i_bin)    = mean(mag_normbin(i_bin).Fmags);
+    phantom_stats.Fmag.normbin.mean.manual(i_bin) = mean(manual_normbin(i_bin).Fmags);
+
+    % compute standard deviation
+    phantom_stats.Fmag.normbin.std.nomag(i_bin)  = std(nomag_normbin(i_bin).Fmags);
+    phantom_stats.Fmag.normbin.std.mag(i_bin)    = std(mag_normbin(i_bin).Fmags);
+    phantom_stats.Fmag.normbin.std.manual(i_bin) = std(manual_normbin(i_bin).Fmags);
+
+    % perform t-test to determine if mean force with magnet is less than without
+    [phantom_stats.Fmag.normbin.diff.h(i_bin),  phantom_stats.Fmag.normbin.diff.p(i_bin), phantom_stats.Fmag.normbin.diff.ci(i_bin,:)] = ...
+            ttest2( mag_normbin(i_bin).Fmags, nomag_normbin(i_bin).Fmags, 'Tail','left', 'Vartype','unequal', 'Alpha', 0.01);
+
+    % compute mean difference between manual/robotic
+    phantom_stats.Fmag.normbin.diff.mean(i_bin) = phantom_stats.Fmag.normbin.mean.mag(i_bin) - phantom_stats.Fmag.normbin.mean.nomag(i_bin);
+
+    % compute RMS standard deviation of the difference
+    phantom_stats.Fmag.normbin.diff.std(i_bin) = sqrt( phantom_stats.Fmag.normbin.std.nomag(i_bin)^2 + phantom_stats.Fmag.normbin.std.mag(i_bin)^2);
+
+end
+
+% remove NaNs and convert to logicals
+phantom_stats.Fmag.normbin.diff.h(isnan(phantom_stats.Fmag.normbin.diff.h)) = 0;
+phantom_stats.Fmag.normbin.diff.h = logical(phantom_stats.Fmag.normbin.diff.h);
+
+
+
+%% Fmag vs Normalized Insertion Depth (all trials)
+figure(18); clf(18);
+hold on; grid on;
+title('Phantom: ||F|| vs Normalized Insertion Depth');
+
+line_width = 1;
+
+for i_trial = 1:length(data_manual_phantom)
+    % manual
+    plot([data_manual_phantom(i_trial).normbin_Fmag.pre.mean; data_manual_phantom(i_trial).normbin_Fmag.post.mean],...
+        'Color', 'r', 'LineWidth', line_width);
+    % unguided
+    plot([data_robotic_phantom(i_trial).nomag_normbin_Fmag.pre.mean; data_robotic_phantom(i_trial).nomag_normbin_Fmag.post.mean],...
+        'Color', 'b', 'LineWidth', line_width);
+    % guided
+    plot([data_robotic_phantom(i_trial).mag_normbin_Fmag.pre.mean; data_robotic_phantom(i_trial).mag_normbin_Fmag.post.mean],...
+        'Color', 'g', 'LineWidth', line_width);
+end
+
+% mark basal turn point
+xline(n_pre_bins, '--k', 'Basal Turn', 'LineWidth',2, 'LabelHorizontalAlignment','center', 'LabelVerticalAlignment','middle');
+
+xlabel('Normalized Angular Insertion Depth');
+ylabel('||F|| (mN)');
+set(gca,'xticklabel',{[]})
+
+legend('Manual','Robotic','Robotic & Magnetic Steering', 'Location','nw');
+
+
+
+%% Fmag vs Normalized Insertion Depth (averages)
+
+if exist('hf_normbin','var')
+    if isvalid(hf_normbin)
+        close(hf_normbin)
+    end
+end
+
+hf_normbin = figure;
+hf_normbin.WindowState = "maximized";
+
+line_width = 2;
+alpha_std = 0.15;
+
+% h_ax(1) = subplot_er(2,1,1);
+h_ax(1) = subplot(2,1,1);
+grid on; hold on; %xlim([0 400]);
+title(sprintf('Phantom: ||F|| vs Normalized Insertion Depth (pre/post basal turn bins = [%i, %i]', n_pre_bins, n_post_bins));
+
+
+% plot means
+plot(phantom_stats.Fmag.normbin.mean.manual, 'Color', 'r','LineWidth',line_width);
+plot(phantom_stats.Fmag.normbin.mean.nomag,  'Color', 'b','LineWidth',line_width);
+plot(phantom_stats.Fmag.normbin.mean.mag,    'Color', 'g','LineWidth',line_width);
+
+% plot standard deviations as shaded regions around means
+n_normbins = n_pre_bins + n_post_bins;
+X = 1:n_normbins;
+
+not_nan = ~isnan(phantom_stats.Fmag.normbin.mean.manual);
+fill([X(not_nan), fliplr(X(not_nan))],...
+     [phantom_stats.Fmag.normbin.mean.manual(not_nan) + phantom_stats.Fmag.normbin.std.manual(not_nan), fliplr(phantom_stats.Fmag.normbin.mean.manual(not_nan) - phantom_stats.Fmag.normbin.std.manual(not_nan))],...
+     'r', 'FaceAlpha',alpha_std, 'EdgeColor','none');
+
+not_nan = ~isnan(phantom_stats.Fmag.normbin.mean.nomag);
+fill([X(not_nan), fliplr(X(not_nan))],...
+     [phantom_stats.Fmag.normbin.mean.nomag(not_nan) + phantom_stats.Fmag.normbin.std.nomag(not_nan), fliplr(phantom_stats.Fmag.normbin.mean.nomag(not_nan) - phantom_stats.Fmag.normbin.std.nomag(not_nan))],...
+     'b', 'FaceAlpha',alpha_std, 'EdgeColor','none');
+
+not_nan = ~isnan(phantom_stats.Fmag.normbin.mean.mag);
+fill([X(not_nan), fliplr(X(not_nan))],...
+     [phantom_stats.Fmag.normbin.mean.mag(not_nan) + phantom_stats.Fmag.normbin.std.mag(not_nan), fliplr(phantom_stats.Fmag.normbin.mean.mag(not_nan) - phantom_stats.Fmag.normbin.std.mag(not_nan))],...
+     'g', 'FaceAlpha',alpha_std, 'EdgeColor','none');
+
+
+ylabel('||F|| (mN)');
+legend('Manual','Robotic','Robotic & Magnetic Steering', 'Location','nw');
+ylim([-10, h_ax(1).YLim(2)])
+
+% mark basal turn point
+xline(n_pre_bins, '--k', 'Basal Turn', 'LineWidth',2, 'LabelHorizontalAlignment','center', 'LabelVerticalAlignment','middle');
+set(gca,'xticklabel',{[]})
+
+
+
+% Plot delta F between guided/unguided robotic insertion means
+h_ax(2) = subplot(2,1,2);
+% h_ax(2) = subplot_er(2,1,2);
+grid on; hold on;
+
+% delta F
+plot(phantom_stats.Fmag.normbin.diff.mean, 'Color', 'k','LineWidth',line_width);
+
+% standard deviation
+not_nan = ~isnan(phantom_stats.Fmag.normbin.diff.mean);
+fill([X(not_nan), fliplr(X(not_nan))],...
+     [phantom_stats.Fmag.normbin.diff.mean(not_nan) + phantom_stats.Fmag.normbin.diff.std(not_nan), fliplr(phantom_stats.Fmag.normbin.diff.mean(not_nan) - phantom_stats.Fmag.normbin.diff.std(not_nan))],...
+     'k', 'FaceAlpha',alpha_std, 'EdgeColor','none');
+
+% mark t-test significant points
+scatter(X(phantom_stats.Fmag.normbin.diff.h), phantom_stats.Fmag.normbin.diff.mean(phantom_stats.Fmag.normbin.diff.h), 40, 'm', 'o', 'LineWidth',1.7)
+
+% mark basal turn point
+xline(n_pre_bins, '--k', 'Basal Turn', 'LineWidth',2, 'LabelHorizontalAlignment','center', 'LabelVerticalAlignment','middle');
+
+xlabel('Normalized Angular Insertion Depth');
+ylabel('\Delta ||F|| (mN)');
+set(gca,'xticklabel',{[]})
+
+linkaxes(h_ax, 'x');
+
 
 %% Plot average data comparison
 if exist('hf_avg_binned','var')
