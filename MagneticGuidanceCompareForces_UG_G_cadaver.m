@@ -35,7 +35,7 @@ for ii = 1:size(data_robotic_cadaver,2)
 end
 
 %% Plot 1: Fmag vs. LID Smoothed on top of Raw and plot trim points as scatter points
-figure(1); clf(1);
+figure(10); clf(10);
 sgtitle('Raw and Smoothed Fmag Cadaver Trials');
 % First plot the unguided data
 

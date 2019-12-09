@@ -23,7 +23,7 @@ elseif ~exist('data_robotic_phantom','var') % if not already loaded
     load('data\phantom\data_robotic_phantom.mat'); % load already generated
 end
 
-RALData_Binning;
+% RALData_Binning;
 
 colors = distinguishable_colors(2*length(data_robotic_phantom)+1);
 alpha = 1; % reduce transparency of unguided plot lines
@@ -140,7 +140,7 @@ for i_trial = 1:length(data_robotic_phantom_trim)
     last_ind = data_robotic_phantom_trim(i_trial).nomag_mea_binned.ind(end);
     scatter(phantom_stats_trim.Fmag.bins(last_ind), phantom_stats_trim.Fmag.mean.nomag(last_ind),  120, 'b', 'd', 'filled');
 
-    last_ind = data_robotic_phantom_trim(i_trial).mag_binned.ind(end-1); % TODO: fix NaN in interp_angdepth
+    last_ind = data_robotic_phantom_trim(i_trial).mag_binned.ind(end);
     scatter(phantom_stats_trim.Fmag.bins(last_ind), phantom_stats_trim.Fmag.mean.mag(last_ind),    120, 'g', 'd', 'filled');
 end
 

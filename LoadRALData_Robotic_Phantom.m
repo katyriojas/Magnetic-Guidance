@@ -148,7 +148,7 @@ data_robotic_phantom(3).nomag_mea_interp_angdepth = ...
 %% Trim Trials 
 % Determine where forces increase by a given magnitude (dF_thresh) within a specified span (X_span)
 
-dF_thresh = 40; % [mN]
+dF_thresh = 35; % [mN]
 X_span    = 1; % [deg or mm]
 
 for ii = 1:length(data_robotic_phantom)
