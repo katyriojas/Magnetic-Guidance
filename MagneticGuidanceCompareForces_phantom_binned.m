@@ -123,8 +123,10 @@ hf_avg_binned.WindowState = "maximized";
 
 
 h_ax(1) = subplot_er(2,1,1);
-grid on; hold on; %xlim([0 400]);
-title(strcat(sprintf('Mean Forces in Phantom (Bin Size = %i', phantom_stats.Fmag.bins(2)-phantom_stats.Fmag.bins(1)), '\circ)'))
+grid on; hold on;
+set(gca,'FontSize',9,'FontName','Times');
+xlim([0, phantom_stats.Fmag.bins(end)+10]);
+% title(strcat(sprintf('Mean Forces in Phantom (Bin Size = %i', phantom_stats.Fmag.bins(2)-phantom_stats.Fmag.bins(1)), '\circ)'))
 
 % plot means
 plot(phantom_stats.Fmag.bins, phantom_stats.Fmag.mean.manual, 'Color', 'r','LineWidth',1.5);
@@ -147,26 +149,29 @@ fill([phantom_stats.Fmag.bins(range), fliplr(phantom_stats.Fmag.bins(range))],..
      [phantom_stats.Fmag.mean.mag(range) + phantom_stats.Fmag.std.mag(range), fliplr(phantom_stats.Fmag.mean.mag(range) - phantom_stats.Fmag.std.mag(range))],...
      'g', 'FaceAlpha',0.15, 'EdgeColor','none');
 
+ ms = 20;
 % mark trial end depths
 for i_trial = 1:length(data_robotic_phantom)
     last_ind = data_manual_phantom(i_trial).binned.ind(end);
-    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.manual(last_ind), 100, 'r', 'd', 'filled');
+    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.manual(last_ind), ms, 'r', 'd', 'filled','MarkerEdgeColor','k');
 
     last_ind = data_robotic_phantom(i_trial).nomag_mea_binned.ind(end);
-    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.nomag(last_ind),  100, 'b', 'd', 'filled');
+    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.nomag(last_ind),  ms, 'b', 'd', 'filled','MarkerEdgeColor','k');
 
     last_ind = data_robotic_phantom(i_trial).mag_binned.ind(end-1); % TODO: fix NaN in interp_angdepth
-    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.mag(last_ind),    100, 'g', 'd', 'filled');
+    scatter(phantom_stats.Fmag.bins(last_ind), phantom_stats.Fmag.mean.mag(last_ind),    ms, 'g', 'd', 'filled','MarkerEdgeColor','k');
 end
 
-ylabel('||F|| (mN)');
-legend('Manual','Robotic','Robotic & Magnetic Steering', 'Location','nw');
+ylabel('||F|| (mN)','FontName','Times','FontSize',9,'FontWeight','bold');
+legend('Manual','Robotic','Robotic & Magnetic Steering', 'Location','nw',...
+    'FontName','Times','FontSize',9);
 % ylim([-10, h_ax(1).YLim(2)])
-ylim([0 120])
+% ylim([0 120])
 
 % Plot delta F between guided/unguided robotic insertion means
 h_ax(2) = subplot_er(2,1,2);
 grid on; hold on;
+set(gca,'FontSize',9,'FontName','Times');
 
 % delta F
 not_nan = ~isnan(phantom_stats.Fmag.diff.mean);
@@ -181,16 +186,19 @@ fill([phantom_stats.Fmag.bins(not_nan), fliplr(phantom_stats.Fmag.bins(not_nan))
 % area(phantom_stats.Fmag.bins(not_nan), phantom_stats.Fmag.diff.mean(not_nan), 'FaceColor',[0,0,0], 'FaceAlpha',0.05, 'EdgeColor','none');
 
 % mark t-test significant points
-scatter(phantom_stats.Fmag.bins(phantom_stats.Fmag.diff.h), phantom_stats.Fmag.diff.mean(phantom_stats.Fmag.diff.h), 100, 'm', '*')
+scatter(phantom_stats.Fmag.bins(phantom_stats.Fmag.diff.h), phantom_stats.Fmag.diff.mean(phantom_stats.Fmag.diff.h), ms, 'm', '*')
 
-xlabel('Angular Insertion Depth (\circ)'); 
-ylabel('\Delta ||F|| (mN)');
+xlabel('Angular Insertion Depth (\circ)','FontName','Times','FontSize',9,'FontWeight','bold'); 
+ylabel('\Delta||F|| (mN)','FontName','Times','FontSize',9,'FontWeight','bold');
 
 linkaxes(h_ax, 'x');
-% xlim([0, phantom_stats.Fmag.bins(end)+10])
-xlim([0,400])
+xlim([0, phantom_stats.Fmag.bins(end)+10])
 ylim([min(phantom_stats.Fmag.diff.mean(not_nan) - phantom_stats.Fmag.diff.std(not_nan) - 10), max(phantom_stats.Fmag.diff.mean(not_nan) + phantom_stats.Fmag.diff.std(not_nan) + 10)]) 
-
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperSize = [8.5 11];
+fig.PaperPosition = [0 0 3.5 2.5];
+saveas(fig,'saved figures\PhantomBinned_Comparison.pdf');
 
 %% Plot p-values from t-test
 % figure(20); clf(20);

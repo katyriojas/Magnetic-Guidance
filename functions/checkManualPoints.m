@@ -6,24 +6,32 @@
 clear all; close all; clc;
 folderpath_vid = 'C:\Users\riojaske\Documents\magsteer\Magnetic-Guidance\data\phantom\manual';
 
-% filename_vid = '\videos\trial1\trial1-manual-ea1-cropped-60fps.mp4';
-% filename_save = strcat(folderpath_vid,'\pman1_60fps_angular_depth.mat');
+% TRIAL1 %
+filename_vid = '\videos\trial1\trial1-manual-ea1-cropped-60fps.mp4';
+filename_save = strcat(folderpath_vid,'\pman1_60fps_angular_depth.mat');
+filename_save_new = strcat(folderpath_vid,'\videos\trial1\pman1_60fps');
+
+% TRIAL2 %
 % filename_vid = '\videos\trial2\trial2-manual-ea1-cropped-60fps.mp4';
 % filename_save = strcat(folderpath_vid,'\pman2_60fps_angular_depth.mat');
+% filename_save_new = strcat(folderpath_vid,'\videos\trial2\pman2_60fps');
+
+% TRIAL3 %
 % filename_vid = '\videos\trial3\trial3-manual-ea1-cropped-60fps.mp4';
 % filename_save = strcat(folderpath_vid,'\pman3_60fps_angular_depth.mat');
-filename_vid = '\videos\trial4\trial4-manual-ea2-cropped-60fps_divide.mp4';
-filename_save = strcat(folderpath_vid,'\pman4_60fps_angular_depth.mat');
-filename_save_new = strcat(folderpath_vid,'\videos\trial4\pman4_60fps');
-% filename_save = strcat(folderpath_vid,'\pman1_angular_depth.mat');
-% filename_save = strcat(folderpath_vid,'\pman2_angular_depth.mat');
-% filename_save = strcat(folderpath_vid,'\pman3_angular_depth.mat');
-% filename_save = strcat(folderpath_vid,'\pman4_angular_depth.mat');
+% filename_save_new = strcat(folderpath_vid,'\videos\trial3\pman3_60fps');
+
+% TRIAL4 %
+% filename_vid = '\videos\trial4\trial4-manual-ea2-cropped-60fps_divide.mp4';
+% filename_save = strcat(folderpath_vid,'\pman4_60fps_angular_depth.mat');
+% filename_save_new = strcat(folderpath_vid,'\videos\trial4\pman4_60fps');
+
 load(filename_save);
 
 mag = 300;
 
 video_path = fullfile(folderpath_vid, filename_vid);
+
 % Load video and read first frame
 vid = VideoReader(video_path);
 vid.CurrentTime = 0;

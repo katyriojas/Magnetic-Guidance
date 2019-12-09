@@ -152,6 +152,8 @@ for ii = 1:length(data_robotic_phantom)
     max_ang = max([max_ang,...
                    max(data_robotic_phantom(ii).nomag_mea_interp_angdepth),...
                    max(data_robotic_phantom(ii).mag_interp_angdepth)]);
+               max_angle_vec(ii) = max(data_robotic_phantom(ii).nomag_mea_interp_angdepth;
+               
 end
 num_bins = ceil(max_ang/degspan);           
 
