@@ -66,6 +66,8 @@ for ii=1:length(filepaths_robotic_phantom)
     data_robotic_phantom(ii).nomag_ea  = MagneticGuidanceData(filepaths_robotic_phantom(ii).nomag_ea,  cal_slopes);
     data_robotic_phantom(ii).nomag_mea = MagneticGuidanceData(filepaths_robotic_phantom(ii).nomag_mea, cal_slopes);
     data_robotic_phantom(ii).mag       = MagneticGuidanceData(filepaths_robotic_phantom(ii).mag,       cal_slopes);
+
+    % set smoothing span
     data_robotic_phantom(ii).nomag_ea.smooth_span  = force_smooth_span;
     data_robotic_phantom(ii).nomag_mea.smooth_span = force_smooth_span;
     data_robotic_phantom(ii).mag.smooth_span       = force_smooth_span;
@@ -142,76 +144,50 @@ data_robotic_phantom(3).nomag_mea_interp_angdepth = ...
             data_robotic_phantom(3).nomag_mea.depth_insertion, 'linear', 'extrap');
 
 
-%% Binning (Angular Depth)
 
-degspan = 3; % [deg] span/width of each bin
+%% Trim Trials 
+% Determine where forces increase by a given magnitude (dF_thresh) within a specified span (X_span)
 
-% compute the largest angular insertion depth to bound our bins
-max_ang = 0;
-for ii = 1:length(data_robotic_phantom)
-    max_ang = max([max_ang,...
-                   max(data_robotic_phantom(ii).nomag_mea_interp_angdepth),...
-                   max(data_robotic_phantom(ii).mag_interp_angdepth)]);
-end
-num_bins = ceil(max_ang/degspan);
+dF_thresh = 40; % [mN]
+X_span    = 1; % [deg or mm]
 
-% create vector of the bin edges
-bin_edges = 0:degspan:num_bins*degspan;
-
-% create vector of the bin centers
-bins = bin_edges(2:end) - degspan/2;
-
-% sort into bins
 for ii = 1:length(data_robotic_phantom)
 
-    % determine the bin for each interp_angdepth point
-    [~,~,data_robotic_phantom(ii).nomag_mea_binned.ind] = histcounts(data_robotic_phantom(ii).nomag_mea_interp_angdepth, bin_edges);
-    [~,~,data_robotic_phantom(ii).mag_binned.ind]       = histcounts(data_robotic_phantom(ii).mag_interp_angdepth, bin_edges);
+    % angular depth
+%     [trim.mag(ii).ind, trim.mag(ii).cutoff, trim.mag(ii).ind_cutoff] = ...
+%             MagneticGuidanceForceRiseTrimming(data_robotic_phantom(ii).mag_interp_angdepth,...
+%                                               data_robotic_phantom(ii).mag.Fmag_smooth, dF_thresh, X_span);
+% 
+%     [trim.nomag(ii).ind, trim.nomag(ii).cutoff, trim.nomag(ii).ind_cutoff] = ...
+%             MagneticGuidanceForceRiseTrimming(data_robotic_phantom(ii).nomag_mea_interp_angdepth,...
+%                                               data_robotic_phantom(ii).nomag_mea.Fmag_smooth, dF_thresh, X_span);
 
-    % compute mean of all the force measurements within each bin (NaN for bins with no measurements)
-    data_robotic_phantom(ii).nomag_mea_binned.Fmean = zeros(size(bins));
-    data_robotic_phantom(ii).mag_binned.Fmean = zeros(size(bins));
-    for jj = 1:length(bins)
-        data_robotic_phantom(ii).nomag_mea_binned.Fmean(jj) = ...
-            mean( data_robotic_phantom(ii).nomag_mea.Fmag( data_robotic_phantom(ii).nomag_mea_binned.ind == jj ) );
+    % linear depth
+    [trim.mag(ii).ind, trim.mag(ii).cutoff, trim.mag(ii).ind_cutoff] = ...
+            MagneticGuidanceForceRiseTrimming(data_robotic_phantom(ii).mag.depth_insertion,...
+                                              data_robotic_phantom(ii).mag.Fmag_smooth, dF_thresh, X_span);
 
-        data_robotic_phantom(ii).mag_binned.Fmean(jj) = ...
-            mean( data_robotic_phantom(ii).mag.Fmag( data_robotic_phantom(ii).mag_binned.ind == jj ) );
-    end
-    
-    % also save the actual bins and edges
-    data_robotic_phantom(ii).nomag_mea_binned.bins  = bins;
-    data_robotic_phantom(ii).nomag_mea_binned.edges = bin_edges;
-    data_robotic_phantom(ii).mag_binned.bins  = bins;
-    data_robotic_phantom(ii).mag_binned.edges = bin_edges;
+    [trim.nomag(ii).ind, trim.nomag(ii).cutoff, trim.nomag(ii).ind_cutoff] = ...
+            MagneticGuidanceForceRiseTrimming(data_robotic_phantom(ii).nomag_mea.depth_insertion,...
+                                              data_robotic_phantom(ii).nomag_mea.Fmag_smooth, dF_thresh, X_span);
+    % create new trimmed struct
+    data_robotic_phantom_trim(ii).mag.depth_insertion = data_robotic_phantom(ii).mag.depth_insertion(trim.mag(ii).ind);
+    data_robotic_phantom_trim(ii).mag.Fmag            = data_robotic_phantom(ii).mag.Fmag(trim.mag(ii).ind);
+    data_robotic_phantom_trim(ii).mag.Fmag_smooth     = data_robotic_phantom(ii).mag.Fmag_smooth(trim.mag(ii).ind);
+    data_robotic_phantom_trim(ii).mag_interp_angdepth = data_robotic_phantom(ii).mag_interp_angdepth(trim.mag(ii).ind);
+
+    data_robotic_phantom_trim(ii).nomag_mea.depth_insertion     = data_robotic_phantom(ii).nomag_mea.depth_insertion(trim.nomag(ii).ind);
+    data_robotic_phantom_trim(ii).nomag_mea.Fmag                = data_robotic_phantom(ii).nomag_mea.Fmag(trim.nomag(ii).ind);
+    data_robotic_phantom_trim(ii).nomag_mea.Fmag_smooth         = data_robotic_phantom(ii).nomag_mea.Fmag_smooth(trim.nomag(ii).ind);
+    data_robotic_phantom_trim(ii).nomag_mea_interp_angdepth     = data_robotic_phantom(ii).nomag_mea_interp_angdepth(trim.nomag(ii).ind);
+
 end
 
-%% Binning (Normalized Angular Depth)
-
-ang_bt = 125; % [deg] basal turn location
-n_pre_bins  = 30;  % number of bins from start to basal turn
-n_post_bins = 120; % number of bins from basal turn to final depth
-
-% individual trials
-for ii = 1:length(data_robotic_phantom)
-    data_robotic_phantom(ii).nomag_normbin_Fmag = MagneticGuidanceNormalizedBinning( ...
-        data_robotic_phantom(ii).nomag_mea_interp_angdepth, data_robotic_phantom(ii).nomag_mea.Fmag, ang_bt, n_pre_bins, n_post_bins);
-
-    data_robotic_phantom(ii).mag_normbin_Fmag = MagneticGuidanceNormalizedBinning( ...
-        data_robotic_phantom(ii).mag_interp_angdepth, data_robotic_phantom(ii).mag.Fmag, ang_bt, n_pre_bins, n_post_bins);
-end
-
-% combined trials
-for ii = 1:length(data_robotic_phantom)
-    data_robotic_phantom(ii).nomag_normbin_Fmag = MagneticGuidanceNormalizedBinning( ...
-        data_robotic_phantom(ii).nomag_mea_interp_angdepth, data_robotic_phantom(ii).nomag_mea.Fmag, ang_bt, n_pre_bins, n_post_bins);
-
-    data_robotic_phantom(ii).mag_normbin_Fmag = MagneticGuidanceNormalizedBinning( ...
-        data_robotic_phantom(ii).mag_interp_angdepth, data_robotic_phantom(ii).mag.Fmag, ang_bt, n_pre_bins, n_post_bins);
-end
 
 
 %% Update Saved Phantom Data if it is called for
 if update_saved_phantom_data
-   save('data\phantom\data_robotic_phantom.mat','data_robotic_phantom');
+    save('data\phantom\data_robotic_phantom.mat','data_robotic_phantom');
+    save('data\phantom\data_robotic_phantom_trim.mat','data_robotic_phantom_trim');
+    save('data\phantom\trim.mat', 'trim');   
 end
