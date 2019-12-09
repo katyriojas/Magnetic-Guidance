@@ -105,11 +105,16 @@ hf_avg_binned_trimmed = figure;
 % hf_avg_binned_trimmed.WindowState = "maximized";
 
 line_width = 2;
-alpha_std = 0.1;
+alpha_std = 0.22;
+ms = 100; % default 20;
+ms2 = 30; % default 10;
+fs = 28; %pnt
 
 h_ax_t(1) = subplot_er(2,1,1);
 grid on; hold on;
+set(gca,'FontSize',fs,'FontName','Times');
 title(strcat(sprintf('Mean Forces in Phantom - Trimmed (Bin Size = %i', phantom_stats_trim.Fmag.bins(2)-phantom_stats_trim.Fmag.bins(1)), '\circ)'))
+set(gca,'xticklabel',{[]});
 
 % plot means
 plot(phantom_stats_trim.Fmag.bins, phantom_stats_trim.Fmag.mean.manual, 'Color', 'r','LineWidth',line_width);
@@ -135,23 +140,24 @@ fill([phantom_stats_trim.Fmag.bins(range), fliplr(phantom_stats_trim.Fmag.bins(r
 % mark trial end depths
 for i_trial = 1:length(data_robotic_phantom_trim)
     last_ind = data_manual_phantom(i_trial).binned.ind(end);
-    scatter(phantom_stats_trim.Fmag.bins(last_ind), phantom_stats_trim.Fmag.mean.manual(last_ind), 120, 'r', 'd', 'filled');
+    scatter(phantom_stats_trim.Fmag.bins(last_ind), phantom_stats_trim.Fmag.mean.manual(last_ind), ms, 'r', 'd', 'filled','MarkerEdgeColor','k');
 
     last_ind = data_robotic_phantom_trim(i_trial).nomag_mea_binned.ind(end);
-    scatter(phantom_stats_trim.Fmag.bins(last_ind), phantom_stats_trim.Fmag.mean.nomag(last_ind),  120, 'b', 'd', 'filled');
+    scatter(phantom_stats_trim.Fmag.bins(last_ind), phantom_stats_trim.Fmag.mean.nomag(last_ind),  ms, 'b', 'd', 'filled','MarkerEdgeColor','k');
 
     last_ind = data_robotic_phantom_trim(i_trial).mag_binned.ind(end);
     scatter(phantom_stats_trim.Fmag.bins(last_ind), phantom_stats_trim.Fmag.mean.mag(last_ind),    120, 'g', 'd', 'filled');
 end
 
-ylabel('||F|| (mN)');
-legend('Manual','Robotic','Robotic & Magnetic Steering', 'Location','nw');
+ylabel('||F|| (mN)','FontName','Times','FontWeight','bold','FontSize',fs);
+legend('Manual','Robotic','Robotic &\newlineMagnetic Steering', 'Location','nw','FontSize',fs,'FontName','Times');
 ylim([-10, h_ax_t(1).YLim(2)])
-% ylim([0 120])
+yticks([0,25,50,75,100]);
 
 % Plot delta F between guided/unguided robotic insertion means
 h_ax_t(2) = subplot_er(2,1,2);
 grid on; hold on;
+set(gca,'FontSize',fs,'FontName','Times');
 
 % delta F
 not_nan = ~isnan(phantom_stats_trim.Fmag.diff.mean);
@@ -166,16 +172,21 @@ fill([phantom_stats_trim.Fmag.bins(not_nan), fliplr(phantom_stats_trim.Fmag.bins
 % area(phantom_stats_trim.Fmag.bins(not_nan), phantom_stats_trim.Fmag.diff.mean(not_nan), 'FaceColor',[0,0,0], 'FaceAlpha',0.05, 'EdgeColor','none');
 
 % mark t-test significant points
-scatter(phantom_stats_trim.Fmag.bins(phantom_stats_trim.Fmag.diff.h), phantom_stats_trim.Fmag.diff.mean(phantom_stats_trim.Fmag.diff.h), 40, 'm', 'o', 'LineWidth',1.7)
+H = scatter(phantom_stats_trim.Fmag.bins(phantom_stats_trim.Fmag.diff.h), phantom_stats_trim.Fmag.diff.mean(phantom_stats_trim.Fmag.diff.h), ms2, 'm', 'o', 'LineWidth',0.5);
+legend(H,'Reject Null Hypothesis', 'Location','nw','FontSize',fs,'FontName','Times');
 
-xlabel('Angular Insertion Depth (\circ)'); 
-ylabel('\Delta ||F|| (mN)');
+xlabel('Angular Insertion Depth (\circ)','FontWeight','bold','FontSize',fs,'FontName','Times'); 
+ylabel({'Force Reduction','\Delta ||F|| (mN)'},'FontWeight','bold','FontSize',fs,'FontName','Times');
 
 linkaxes(h_ax_t, 'x');
 xlim([0, phantom_stats_trim.Fmag.bins(end)+10])
 % xlim([0,400])
-ylim([min(phantom_stats_trim.Fmag.diff.mean(not_nan) - phantom_stats_trim.Fmag.diff.std(not_nan) - 10), max(phantom_stats_trim.Fmag.diff.mean(not_nan) + phantom_stats_trim.Fmag.diff.std(not_nan) + 10)]) 
-
+ylim([min(phantom_stats_trim.Fmag.diff.mean(not_nan) - phantom_stats_trim.Fmag.diff.std(not_nan) - 2), max(phantom_stats_trim.Fmag.diff.mean(not_nan) + phantom_stats_trim.Fmag.diff.std(not_nan) + 2)]) 
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperSize = [8.5 11];
+fig.PaperPosition = [0 0 10.5 10.25]; % 10.5, 10.25 for poster; 3.5, 2.5 for paper
+saveas(fig,'saved figures\binned_phantom.pdf');
 
 
 %% Plot Averaged Fmag vs AID (untrimmed)
@@ -219,7 +230,6 @@ fill([phantom_stats.Fmag.bins(range), fliplr(phantom_stats.Fmag.bins(range))],..
      [phantom_stats.Fmag.mean.mag(range) + phantom_stats.Fmag.std.mag(range), fliplr(phantom_stats.Fmag.mean.mag(range) - phantom_stats.Fmag.std.mag(range))],...
      'g', 'FaceAlpha',alpha_std, 'EdgeColor','none');
 
- ms = 20;
 % mark trial end depths
 for i_trial = 1:length(data_robotic_phantom)
     last_ind = data_manual_phantom(i_trial).binned.ind(end);
@@ -264,13 +274,6 @@ ylabel('\Delta||F|| (mN)','FontName','Times','FontSize',9,'FontWeight','bold');
 linkaxes(h_ax, 'x');
 xlim([0, phantom_stats.Fmag.bins(end)+10])
 ylim([min(phantom_stats.Fmag.diff.mean(not_nan) - phantom_stats.Fmag.diff.std(not_nan) - 10), max(phantom_stats.Fmag.diff.mean(not_nan) + phantom_stats.Fmag.diff.std(not_nan) + 10)]) 
-fig = gcf;
-fig.PaperUnits = 'inches';
-fig.PaperSize = [8.5 11];
-fig.PaperPosition = [0 0 3.5 2.5];
-saveas(fig,'saved figures\PhantomBinned_Comparison.pdf');
-
-
 
 %% Fmag vs Normalized Insertion Depth (all trials)
 
@@ -387,5 +390,5 @@ saveas(fig,'saved figures\PhantomBinned_Comparison.pdf');
 
 
 %% Plot p-values from t-test
-% figure(20); clf(20);
-% bar(phantom_stats.Fmag.bins, phantom_stats.Fmag.diff.p)
+figure(20); clf(20);
+bar(phantom_stats_trim.Fmag.bins, phantom_stats_trim.Fmag.diff.p)
