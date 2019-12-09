@@ -79,32 +79,6 @@ for ii = 1:length(data_manual_cadaver)
 end
 
 
-%% Binning
-
-% use same bins as robotic data
-if ~exist('data_robotic_phantom','var')
-    error('Must first run ''LoadRALData_Robotic_Phantom.m'' to generate bins')
-end
-
-% sort into bins
-for ii = 1:length(data_manual_phantom)
-
-    % determine the bin for each interp_angdepth point
-    [~,~,data_manual_phantom(ii).binned.ind] = histcounts(data_manual_phantom(ii).interp_angdepth, data_robotic_phantom(ii).mag_binned.edges);
-
-    % compute mean of all the force measurements within each bin (NaN for bins with no measurements)
-    data_manual_phantom(ii).binned.Fmean = zeros(size(bins));
-    for jj = 1:length(bins)
-        data_manual_phantom(ii).binned.Fmean(jj) = ...
-            mean( data_manual_phantom(ii).Fmag_trimmed( data_manual_phantom(ii).binned.ind == jj ) );
-    end
-    
-    % also save the actual bins and edges used
-    data_manual_phantom(ii).binned.bins  = bins;
-    data_manual_phantom(ii).binned.edges = bin_edges;
-end
-
-
 %% Update saved manual data if requested
 if update_saved_manual_data
     save('data\phantom\data_manual_phantom.mat','data_manual_phantom');

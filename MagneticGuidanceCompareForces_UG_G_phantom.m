@@ -27,7 +27,7 @@ colors = distinguishable_colors(2*length(data_robotic_phantom)+1);
 alpha = 1; % reduce transparency of unguided plot lines
 xyzColors = [1,0,0;0,1,0;0,0,1;...
             1,0,1;0,0.2,0.13;0,1,1];
-line_width_smooth = 1.5;
+line_width_smooth = 1;
 line_width_raw = 0.75;
 
 %% Plot -> Fmag vs Linear Insertion Depth
@@ -123,6 +123,40 @@ labels.mag = {'mag1','mag2','mag3','mag4'};
 labels.nomag = {'nomag1','nomag2','nomag3','nomag4'};
 legend([h_nomag(1:ii),h_mag(1:ii)], [labels.nomag(1:ii),labels.mag(1:ii)], 'Location','nw')
 
+%% Plot the derivative of AID vs. LID
+% figure(7); clf(7); hold on; grid on;
+% 
+% % for ii = 1:length(data_robotic_phantom)
+% for ii = 1:1
+%     
+%     % downsample, smooth, then upsample to make less sensitive to short-term fluctuations
+%     x = 4; % downsample factor
+% %     lin_depth = data_robotic_phantom(ii).nomag_mea.depth_insertion(1:x:end);
+% %     angdepth  = smooth( lin_depth, data_robotic_phantom(ii).nomag_mea_interp_angdepth(1:x:end), 50, 'sgolay');
+%     angdepth  = smooth( data_robotic_phantom(ii).nomag_mea.depth_insertion, data_robotic_phantom(ii).nomag_mea_interp_angdepth, 50, 'sgolay');
+%     angdepth  = interp1(data_robotic_phantom(ii).nomag_mea.depth_insertion, angdepth, data_robotic_phantom(ii).nomag_mea.depth_insertion(1:x:end));
+%     lin_depth = data_robotic_phantom(ii).nomag_mea.depth_insertion(1:x:end);
+% 
+%     h_nomag(ii) = plot(lin_depth(1:end-1), diff(angdepth)/diff(lin_depth),...
+%                        'Color',colors(ii*2,:), 'LineStyle',':', 'LineWidth', line_width_smooth);
+% 
+% 
+%     angdepth  = smooth( data_robotic_phantom(ii).mag.depth_insertion, data_robotic_phantom(ii).mag_interp_angdepth, 50, 'sgolay');
+%     angdepth  = interp1(data_robotic_phantom(ii).mag.depth_insertion, angdepth, data_robotic_phantom(ii).mag.depth_insertion(1:x:end));
+%     lin_depth = data_robotic_phantom(ii).mag.depth_insertion(1:x:end);
+%     h_mag(ii)   = plot(lin_depth(1:end-1), diff(angdepth)/diff(lin_depth),...
+%                        'Color',colors(ii*2-1,:), 'LineWidth', line_width_smooth);
+% 
+% end
+% 
+% xlabel('Actuator Insertion Distance (mm)')
+% ylabel('$\frac{\Delta Angular Depth}{Linear Depth}$', 'Interpreter','latex', 'FontSize',18)
+% 
+% clear labels;
+% labels.mag = {'mag1','mag2','mag3','mag4'};
+% labels.nomag = {'nomag1','nomag2','nomag3','nomag4'};
+% legend([h_nomag(1:ii),h_mag(1:ii)], [labels.nomag(1:ii),labels.mag(1:ii)], 'Location','nw')
+
 %% Plot Fmag vs. AID
 figure(4); clf(4);
 hold on; grid on;
@@ -169,6 +203,7 @@ clear labels;
 labels.mag = {'mag1','mag2','mag3','mag4'};
 labels.nomag = {'nomag1','nomag2','nomag3','nomag4'};
 legend([h_nomag(1:ii),h_mag(1:ii)], [labels.nomag(1:ii),labels.mag(1:ii)], 'Location','nw')
+
 
 %% Plot -> XYZ Force vs. Angular insertion depth
 figure(5); clf(5); 
