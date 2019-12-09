@@ -78,8 +78,8 @@ end
 
 angle_smooth_span = 20;
 
-% video_base_path = 'C:\Users\riojaske\Documents\magsteer\Videos';
-video_base_path = 'D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL';
+video_base_path = 'C:\Users\riojaske\Documents\magsteer\Videos';
+% video_base_path = 'D:\Trevor\My Documents\MED lab\Cochlear R01\Mag Steering\Experiments\RAL';
 
 filepaths_robotic_phantom(1).nomag_mea.vid = fullfile(video_base_path, 'phantom_ug_mea1_trial1_1.25\trial1-ug-mea1-tracked.mp4');
 filepaths_robotic_phantom(1).mag.vid       = fullfile(video_base_path, 'phantom_g_mea1_trial1_1.25\trial1-guided-mea1-1.25-tracked.mp4');
@@ -103,13 +103,13 @@ for ii = 1:length(filepaths_robotic_phantom)
     data_robotic_phantom(ii).mag_interp_angdepth = ...
         interp1(data_robotic_phantom(ii).mag_angular_depth.time,...
                 data_robotic_phantom(ii).mag_angular_depth.angle_smooth,...
-                data_robotic_phantom(ii).mag.time_insertion);
+                data_robotic_phantom(ii).mag.time_insertion, 'linear', 'extrap');
 
     if ii~=3 % video stopped early on nomag trial 3  
         data_robotic_phantom(ii).nomag_mea_interp_angdepth = ...
             interp1(data_robotic_phantom(ii).nomag_mea_angular_depth.time,...
                     data_robotic_phantom(ii).nomag_mea_angular_depth.angle_smooth,...
-                    data_robotic_phantom(ii).nomag_mea.time_insertion);
+                    data_robotic_phantom(ii).nomag_mea.time_insertion, 'linear', 'extrap');
     end
 
 end

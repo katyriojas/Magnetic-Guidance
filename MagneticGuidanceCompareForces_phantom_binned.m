@@ -6,7 +6,6 @@
 % Trevor Bruns and Katy Riojas
 % Last Updated: December 2019
 
-
 regenerate_manual_data = false;
 regenerate_phantom_data = false;
 
@@ -24,7 +23,7 @@ elseif ~exist('data_robotic_phantom','var') % if not already loaded
     load('data\phantom\data_robotic_phantom.mat'); % load already generated
 end
 
-% RALData_Binning;
+RALData_Binning;
 
 colors = distinguishable_colors(2*length(data_robotic_phantom)+1);
 alpha = 1; % reduce transparency of unguided plot lines
