@@ -230,8 +230,9 @@ for i_bin = 1:length(phantom_stats.Fmag.bins)
     % compute mean difference between manual/robotic
     phantom_stats.Fmag.diff.mean(i_bin) = phantom_stats.Fmag.mean.mag(i_bin) - phantom_stats.Fmag.mean.nomag(i_bin);
 
-    % compute RMS standard deviation of the difference
-    phantom_stats.Fmag.diff.std(i_bin) = sqrt( phantom_stats.Fmag.std.nomag(i_bin)^2 + phantom_stats.Fmag.std.mag(i_bin)^2);
+    % compute standard error of the difference between means
+    phantom_stats.Fmag.diff.std(i_bin) = sqrt( (phantom_stats.Fmag.std.nomag(i_bin)^2) / length(nomag_mea_binned(i_bin).Fmags) ...
+                                               + (phantom_stats.Fmag.std.mag(i_bin)^2) / length(mag_binned(i_bin).Fmags) );
 
 end
 
@@ -280,8 +281,10 @@ for i_bin = 1:n_pre_bins
     % compute mean difference between manual/robotic
     phantom_stats.Fmag.normbin.diff.mean(i_bin) = phantom_stats.Fmag.normbin.std.mag(i_bin) - phantom_stats.Fmag.normbin.std.nomag(i_bin);
 
-    % compute RMS standard deviation of the difference
-    phantom_stats.Fmag.normbin.diff.std(i_bin) = sqrt( phantom_stats.Fmag.normbin.std.nomag(i_bin)^2 + phantom_stats.Fmag.normbin.std.mag(i_bin)^2);
+    
+    % compute standard error of the difference between means
+    phantom_stats.Fmag.normbin.diff.std(i_bin) = sqrt( (phantom_stats.Fmag.normbin.std.nomag(i_bin)^2) / length(nomag_normbin(i_bin).Fmags) ...
+                                                               + (phantom_stats.Fmag.std.mag(i_bin)^2) / length(mag_normbin(i_bin).Fmags) );
 
 end
 
@@ -323,9 +326,10 @@ for i_post_bin = 1:n_post_bins
     % compute mean difference between manual/robotic
     phantom_stats.Fmag.normbin.diff.mean(i_bin) = phantom_stats.Fmag.normbin.mean.mag(i_bin) - phantom_stats.Fmag.normbin.mean.nomag(i_bin);
 
-    % compute RMS standard deviation of the difference
-    phantom_stats.Fmag.normbin.diff.std(i_bin) = sqrt( phantom_stats.Fmag.normbin.std.nomag(i_bin)^2 + phantom_stats.Fmag.normbin.std.mag(i_bin)^2);
 
+    % compute standard error of the difference between means
+    phantom_stats.Fmag.normbin.diff.std(i_bin) = sqrt( (phantom_stats.Fmag.normbin.std.nomag(i_bin)^2) / length(nomag_normbin(i_bin).Fmags) ...
+                                                               + (phantom_stats.Fmag.std.mag(i_bin)^2) / length(mag_normbin(i_bin).Fmags) );
 end
 
 % remove NaNs and convert to logicals
@@ -391,9 +395,9 @@ for i_bin = 1:length(phantom_stats_trim.Fmag.bins)
     % compute mean difference between manual/robotic
     phantom_stats_trim.Fmag.diff.mean(i_bin) = phantom_stats_trim.Fmag.mean.mag(i_bin) - phantom_stats_trim.Fmag.mean.nomag(i_bin);
 
-    % compute RMS standard deviation of the difference
-    phantom_stats_trim.Fmag.diff.std(i_bin) = sqrt( phantom_stats_trim.Fmag.std.nomag(i_bin)^2 + phantom_stats_trim.Fmag.std.mag(i_bin)^2);
-
+    % compute standard error of the difference between means
+    phantom_stats_trim.Fmag.diff.std(i_bin) = sqrt( (phantom_stats_trim.Fmag.std.nomag(i_bin)^2) / length(nomag_mea_binned(i_bin).Fmags) ...
+                                                    + (phantom_stats_trim.Fmag.std.mag(i_bin)^2) / length(mag_binned(i_bin).Fmags) );
 end
 
 % remove NaNs and convert to logicals

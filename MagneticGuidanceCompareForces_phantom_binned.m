@@ -164,12 +164,14 @@ not_nan = ~isnan(phantom_stats_trim.Fmag.diff.mean);
 plot(phantom_stats_trim.Fmag.bins(not_nan), phantom_stats_trim.Fmag.diff.mean(not_nan), 'Color', 'k','LineWidth',line_width);
 
 % standard deviation
-% range = find(~isnan(phantom_stats_trim.Fmag.mean.manual),1) : (length(phantom_stats_trim.Fmag.bins) - find(~isnan( fliplr(phantom_stats_trim.Fmag.mean.manual)),1)); 
 fill([phantom_stats_trim.Fmag.bins(not_nan), fliplr(phantom_stats_trim.Fmag.bins(not_nan))],...
      [phantom_stats_trim.Fmag.diff.mean(not_nan) + phantom_stats_trim.Fmag.diff.std(not_nan), fliplr(phantom_stats_trim.Fmag.diff.mean(not_nan) - phantom_stats_trim.Fmag.diff.std(not_nan))],...
      'k', 'FaceAlpha',alpha_std, 'EdgeColor','none');
 
-% area(phantom_stats_trim.Fmag.bins(not_nan), phantom_stats_trim.Fmag.diff.mean(not_nan), 'FaceColor',[0,0,0], 'FaceAlpha',0.05, 'EdgeColor','none');
+% plot t-test confidence interval as shaded regions around means
+% fill([phantom_stats_trim.Fmag.bins(not_nan), fliplr(phantom_stats_trim.Fmag.bins(not_nan))],...
+%      [phantom_stats_trim.Fmag.diff.ci(not_nan,1)', fliplr(phantom_stats_trim.Fmag.diff.ci(not_nan,2)')],...
+%      'k', 'FaceAlpha',alpha_std, 'EdgeColor','none');
 
 % mark t-test significant points
 H = scatter(phantom_stats_trim.Fmag.bins(phantom_stats_trim.Fmag.diff.h), phantom_stats_trim.Fmag.diff.mean(phantom_stats_trim.Fmag.diff.h), ms2, 'm', 'o', 'LineWidth',0.5);
@@ -180,7 +182,6 @@ ylabel({'Force Reduction','\Delta ||F|| (mN)'},'FontWeight','bold','FontSize',fs
 
 linkaxes(h_ax_t, 'x');
 xlim([0, phantom_stats_trim.Fmag.bins(end)+10])
-% xlim([0,400])
 ylim([min(phantom_stats_trim.Fmag.diff.mean(not_nan) - phantom_stats_trim.Fmag.diff.std(not_nan) - 2), max(phantom_stats_trim.Fmag.diff.mean(not_nan) + phantom_stats_trim.Fmag.diff.std(not_nan) + 2)]) 
 fig = gcf;
 fig.PaperUnits = 'inches';
@@ -390,5 +391,5 @@ ylim([min(phantom_stats.Fmag.diff.mean(not_nan) - phantom_stats.Fmag.diff.std(no
 
 
 %% Plot p-values from t-test
-figure(20); clf(20);
-bar(phantom_stats_trim.Fmag.bins, phantom_stats_trim.Fmag.diff.p)
+% figure(20); clf(20);
+% bar(phantom_stats_trim.Fmag.bins, phantom_stats_trim.Fmag.diff.p)
