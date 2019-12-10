@@ -178,10 +178,11 @@ H = scatter(phantom_stats_trim.Fmag.bins(phantom_stats_trim.Fmag.diff.h), phanto
 legend(H,'Reject Null Hypothesis', 'Location','nw','FontSize',fs,'FontName','Times');
 
 xlabel('Angular Insertion Depth (\circ)','FontWeight','bold','FontSize',fs,'FontName','Times'); 
-ylabel({'Force Reduction','\Delta ||F|| (mN)'},'FontWeight','bold','FontSize',fs,'FontName','Times');
+ylabel('\Delta||F|| (mN)','FontWeight','bold','FontSize',fs,'FontName','Times');
 
 linkaxes(h_ax_t, 'x');
-xlim([0, phantom_stats_trim.Fmag.bins(end)+10])
+xlim([0, phantom_stats_trim.Fmag.bins(end)+5])
+% xlim([0,400])
 ylim([min(phantom_stats_trim.Fmag.diff.mean(not_nan) - phantom_stats_trim.Fmag.diff.std(not_nan) - 2), max(phantom_stats_trim.Fmag.diff.mean(not_nan) + phantom_stats_trim.Fmag.diff.std(not_nan) + 2)]) 
 fig = gcf;
 fig.PaperUnits = 'inches';
