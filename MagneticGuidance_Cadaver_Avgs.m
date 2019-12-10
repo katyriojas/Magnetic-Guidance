@@ -105,9 +105,9 @@ for i_bin = 1:length(cadaver_stats.Fmag.bins)
     % compute mean difference between manual/robotic
     cadaver_stats.Fmag.diff.mean(i_bin) = cadaver_stats.Fmag.mean.mag(i_bin) - cadaver_stats.Fmag.mean.nomag(i_bin);
 
-    % compute RMS standard deviation of the difference
-    cadaver_stats.Fmag.diff.std(i_bin) = sqrt( cadaver_stats.Fmag.std.nomag(i_bin)^2 + cadaver_stats.Fmag.std.mag(i_bin)^2);
-
+    % compute standard error of the difference between means
+    cadaver_stats.Fmag.diff.std(i_bin) = sqrt( (cadaver_stats.Fmag.std.nomag(i_bin)^2) / length(nomag_binned(i_bin).Fmags) ...
+                                               + (cadaver_stats.Fmag.std.mag(i_bin)^2) / length(mag_binned(i_bin).Fmags) );
 end
 
 % remove NaNs and convert to logicals
@@ -127,7 +127,7 @@ hf_avg_cadaver_binned = figure;
 % hf_avg_cadaver_binned.WindowState = "maximized";
 
 line_width = 2;
-alpha_std = 0.1;
+alpha_std = 0.22;
 
 h_ax_t(1) = subplot_er(2,1,1);
 grid on; hold on;
@@ -181,5 +181,4 @@ xlabel('Angular Insertion Depth (\circ)');
 ylabel('\Delta ||F|| (mN)');
 
 linkaxes(h_ax_t, 'x');
-xlim([0, cadaver_stats.Fmag.bins(end)+10])
 ylim([min(cadaver_stats.Fmag.diff.mean(not_nan) - cadaver_stats.Fmag.diff.std(not_nan) - 10), max(cadaver_stats.Fmag.diff.mean(not_nan) + cadaver_stats.Fmag.diff.std(not_nan) + 10)]) 
