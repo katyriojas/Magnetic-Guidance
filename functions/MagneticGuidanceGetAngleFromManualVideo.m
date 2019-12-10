@@ -11,14 +11,14 @@
 clear all; close all; clc;
 folderpath_vid = 'C:\Users\riojaske\Documents\magsteer\Magnetic-Guidance\data\phantom\manual';
 
-% filename_vid = '\videos\trial1\trial1-manual-ea1-cropped-60fps.mp4';
-% filename_save = strcat(folderpath_vid,'\pman1_60fps_angular_depth.mat');
+filename_vid = '\videos\trial1\trial1-manual-ea1-cropped-60fps.mp4';
+filename_save = strcat(folderpath_vid,'\pman1_60fps_angular_depth.mat');
 % filename_vid = '\videos\trial2\trial2-manual-ea1-cropped-60fps.mp4';
 % filename_save = strcat(folderpath_vid,'\pman2_60fps_angular_depth.mat');
 % filename_vid = '\videos\trial3\trial3-manual-ea1-cropped-60fps.mp4';
 % filename_save = strcat(folderpath_vid,'\pman3_60fps_angular_depth.mat');
-filename_vid = '\videos\trial4\trial4-manual-ea2-cropped-60fps_divide.mp4';
-filename_save = strcat(folderpath_vid,'\pman4_60fps_angular_depth.mat');
+% filename_vid = '\videos\trial4\trial4-manual-ea2-cropped-60fps_divide.mp4';
+% filename_save = strcat(folderpath_vid,'\pman4_60fps_angular_depth.mat');
 
 video_path = fullfile(folderpath_vid, filename_vid);
 
@@ -107,3 +107,4 @@ xlabel('Time (s)')
 ylabel('Insertion Angle (deg)')
 plot(insertion_angle.time,insertion_angle.angle,'m','LineWidth',2)
 plot(insertion_angle.time,insertion_angle.angle_smooth,'b','LineWidth',2)
+legend('Angle','Smoothed Angle');
