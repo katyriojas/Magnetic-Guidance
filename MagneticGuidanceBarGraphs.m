@@ -68,7 +68,8 @@ end
 hf_AID = figure;
 hold on
 
-fs = 10; %pnt
+fs = 10; % font size
+ms = 40; % marker size
 
 title('Final Angular Insertion Depths')
 
@@ -77,6 +78,9 @@ bar_data.AID = [phantom_table.AID'; cadaver_table.AID'];
 
 % create bar graph
 h_bar_AID = bar(bar_data.AID);
+h_bar_AID(1).FaceColor = [1 0 0]; % manual   -> red
+h_bar_AID(2).FaceColor = [0 0 1]; % unguided -> blue
+h_bar_AID(3).FaceColor = [0 1 0]; % guided   -> green
 
 
 % use min/max for error bars
@@ -95,15 +99,23 @@ for k1 = 1:size(bar_data.AID,2)
     ctr(k1,:) = bsxfun(@plus, h_bar_AID(k1).XData, h_bar_AID(k1).XOffset'); % Note: ‘XOffset’ Is An Undocumented Feature, This Selects The ‘bar’ Centres
 end
 
+% plot individual trials
+scatter(repmat(ctr(1),[1 4]), AID.phantom.manual, ms, 'k', 'o', 'LineWidth',1);
+scatter(repmat(ctr(2),[1 4]), AID.phantom.nomag,  ms, 'k', 'o', 'LineWidth',1);
+scatter(repmat(ctr(3),[1 4]), AID.phantom.mag,    ms, 'k', 'o', 'LineWidth',1);
+scatter(repmat(ctr(4),[1 3]), AID.cadaver.manual, ms, 'k', 'o', 'LineWidth',1);
+scatter(repmat(ctr(5),[1 3]), AID.cadaver.nomag,  ms, 'k', 'o', 'LineWidth',1);
+scatter(repmat(ctr(6),[1 3]), AID.cadaver.mag,    ms, 'k', 'o', 'LineWidth',1);
+
 % plot error bars
-errorbar(ctr', bar_data.AID, err_neg, err_pos, 'k', 'linestyle', 'none');
+% errorbar(ctr', bar_data.AID, err_neg, err_pos, 'k', 'linestyle', 'none');
 
 % add labels etc.
 xticks([1 2])
 xticklabels({'Phantom', 'Cadaver'})
 ylabel('Angular Insertion Depth (\circ)', 'FontWeight','bold', 'FontSize',fs, 'FontName','Times'); 
 legend('Manual','Robotic','Robotic &\newlineMagnetic Steering', 'Location','nw', 'FontName','Times', 'FontSize',fs);
-
+set(gca,'YGrid','on')
 
 
 %% Bar Graph of Peak Forces
