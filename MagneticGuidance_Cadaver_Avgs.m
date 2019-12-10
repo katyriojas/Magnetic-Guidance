@@ -115,6 +115,7 @@ cadaver_stats.Fmag.diff.h(isnan(cadaver_stats.Fmag.diff.h)) = 0;
 cadaver_stats.Fmag.diff.h = logical(cadaver_stats.Fmag.diff.h);
 
 
+
 %% Plot Averaged Fmag vs AID (trimmed)
 
 if exist('hf_avg_cadaver_binned','var')

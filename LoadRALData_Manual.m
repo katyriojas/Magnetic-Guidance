@@ -50,10 +50,10 @@ for ii = 1:length(data_manual_phantom)
 end
 
 %% verify smoothing
-figure; hold on; grid on;
-ii=1;
-plot(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle, '--'); 
-plot(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle_smooth)
+% figure; hold on; grid on;
+% ii=1;
+% plot(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle, '--'); 
+% plot(data_manual_phantom(ii).angular_depth.time, data_manual_phantom(ii).angular_depth.angle_smooth)
 
 
 %% Interpolate force points at trimmed points

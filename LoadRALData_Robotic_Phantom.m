@@ -184,7 +184,6 @@ for ii = 1:length(data_robotic_phantom)
 end
 
 
-
 %% Update Saved Phantom Data if it is called for
 if update_saved_phantom_data
     save('data\phantom\data_robotic_phantom.mat','data_robotic_phantom');
