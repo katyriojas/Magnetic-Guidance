@@ -129,9 +129,9 @@ hf_avg_cadaver_binned = figure;
 
 line_width = 2;
 alpha_std = 0.22;
-ms = 100; % default 20;
-ms2 = 30; % default 10;
-fs = 28; %pnt
+ms = 20; % default 20;
+ms2 = 10; % default 10;
+fs = 9; %pnt
 
 h_ax_t(1) = subplot_er(2,1,1);
 grid on; hold on;
@@ -157,15 +157,15 @@ fill([cadaver_stats.Fmag.bins(range), fliplr(cadaver_stats.Fmag.bins(range))],..
 % mark trial end depths
 for i_trial = 1:length(data_robotic_cadaver)
     last_ind = data_robotic_cadaver(i_trial).nomag_binned.ind(end);
-    scatter(cadaver_stats.Fmag.bins(last_ind), cadaver_stats.Fmag.mean.nomag(last_ind),  120, 'b', 'd', 'filled');
+    scatter(cadaver_stats.Fmag.bins(last_ind), cadaver_stats.Fmag.mean.nomag(last_ind),  ms, 'b', 'd', 'filled','MarkerEdgeColor','k');
 
     last_ind = data_robotic_cadaver(i_trial).mag_binned.ind(end);
-    scatter(cadaver_stats.Fmag.bins(last_ind), cadaver_stats.Fmag.mean.mag(last_ind),    120, 'g', 'd', 'filled');
+    scatter(cadaver_stats.Fmag.bins(last_ind), cadaver_stats.Fmag.mean.mag(last_ind),    ms, 'g', 'd', 'filled','MarkerEdgeColor','k');
 end
 
-ylabel('Force ||F|| (mN)','FontName','Times','FontWeight','bold','FontSize',fs);
-legend('Robotic','Robotic &\newlineMagnetic Steering', 'Location','nw','FontSize',fs,'FontName','Times');
-ylim([-10, h_ax_t(1).YLim(2)])
+ylabel('||F|| (mN)','FontName','Times','FontWeight','bold','FontSize',fs);
+legend('Robotic','Robotic & Magnetic Steering', 'Location','nw','FontSize',fs,'FontName','Times');
+ylim([-10, 143])
 yticks([0,25,50,75,100,125]);
 
 % Plot delta F between guided/unguided robotic insertion means
@@ -184,16 +184,17 @@ fill([cadaver_stats.Fmag.bins(not_nan), fliplr(cadaver_stats.Fmag.bins(not_nan))
 
 % mark t-test significant points
 H = scatter(cadaver_stats.Fmag.bins(cadaver_stats.Fmag.diff.h), cadaver_stats.Fmag.diff.mean(cadaver_stats.Fmag.diff.h), ms2, 'm', 'o', 'LineWidth',0.5);
-legend(H,'Reject Null Hypothesis', 'Location','nw','FontSize',fs,'FontName','Times');
+legend(H,'Reject Null Hypothesis', 'Location','sw','FontSize',fs,'FontName','Times');
 
-xlabel('Angular Insertion Depth (\circ)','FontWeight','bold','FontSize',fs,'FontName','Times'); 
-ylabel({'Force Reduction','\Delta ||F|| (mN)'},'FontWeight','bold','FontSize',fs,'FontName','Times');
+xlabel('Linear Insertion Depth (mm)','FontWeight','bold','FontSize',fs,'FontName','Times'); 
+ylabel('\Delta ||F|| (mN)','FontWeight','bold','FontSize',fs,'FontName','Times');
 
 linkaxes(h_ax_t, 'x');
 % xlim([0, cadaver_stats.Fmag.bins(end)+5])
-ylim([min(cadaver_stats.Fmag.diff.mean(not_nan) - cadaver_stats.Fmag.diff.std(not_nan) - 2), max(cadaver_stats.Fmag.diff.mean(not_nan) + cadaver_stats.Fmag.diff.std(not_nan) + 2)]) 
+% ylim([min(cadaver_stats.Fmag.diff.mean(not_nan) - cadaver_stats.Fmag.diff.std(not_nan) - 2), max(cadaver_stats.Fmag.diff.mean(not_nan) + cadaver_stats.Fmag.diff.std(not_nan) + 2)]) 
+ylim([-41,3]);
 fig = gcf;
 fig.PaperUnits = 'inches';
 fig.PaperSize = [8.5 11];
-fig.PaperPosition = [0 0 10.5 10.25]; % 10.5, 10.25 for poster; 3.5, 2.5 for paper
+fig.PaperPosition = [0 0 4 2.5]; % 10.5, 10.25 for poster; 3.5, 2.5 for paper
 saveas(fig,'saved figures\binned_cadaver.pdf');

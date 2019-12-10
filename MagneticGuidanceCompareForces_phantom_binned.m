@@ -23,7 +23,7 @@ elseif ~exist('data_robotic_phantom','var') % if not already loaded
     load('data\phantom\data_robotic_phantom.mat'); % load already generated
 end
 
-% RALData_Binning;
+RALData_Binning;
 
 colors = distinguishable_colors(2*length(data_robotic_phantom)+1);
 alpha = 1; % reduce transparency of unguided plot lines
@@ -106,9 +106,9 @@ hf_avg_binned_trimmed = figure;
 
 line_width = 2;
 alpha_std = 0.22;
-ms = 100; % default 20;
-ms2 = 30; % default 10;
-fs = 28; %pnt
+ms = 20; % default 20;
+ms2 = 10; % default 10;
+fs = 9; %pnt
 
 h_ax_t(1) = subplot_er(2,1,1);
 grid on; hold on;
@@ -146,13 +146,14 @@ for i_trial = 1:length(data_robotic_phantom_trim)
     scatter(phantom_stats_trim.Fmag.bins(last_ind), phantom_stats_trim.Fmag.mean.nomag(last_ind),  ms, 'b', 'd', 'filled','MarkerEdgeColor','k');
 
     last_ind = data_robotic_phantom_trim(i_trial).mag_binned.ind(end);
-    scatter(phantom_stats_trim.Fmag.bins(last_ind), phantom_stats_trim.Fmag.mean.mag(last_ind),    120, 'g', 'd', 'filled');
+    scatter(phantom_stats_trim.Fmag.bins(last_ind), phantom_stats_trim.Fmag.mean.mag(last_ind),    ms, 'g', 'd', 'filled','MarkerEdgeColor','k');
 end
 
 ylabel('||F|| (mN)','FontName','Times','FontWeight','bold','FontSize',fs);
 legend('Manual','Robotic','Robotic &\newlineMagnetic Steering', 'Location','nw','FontSize',fs,'FontName','Times');
-ylim([-10, h_ax_t(1).YLim(2)])
-yticks([0,25,50,75,100]);
+% ylim([-10, h_ax_t(1).YLim(2)])
+ylim([-10,143]);
+yticks([0,25,50,75,100,125]);
 
 % Plot delta F between guided/unguided robotic insertion means
 h_ax_t(2) = subplot_er(2,1,2);
@@ -175,7 +176,7 @@ fill([phantom_stats_trim.Fmag.bins(not_nan), fliplr(phantom_stats_trim.Fmag.bins
 
 % mark t-test significant points
 H = scatter(phantom_stats_trim.Fmag.bins(phantom_stats_trim.Fmag.diff.h), phantom_stats_trim.Fmag.diff.mean(phantom_stats_trim.Fmag.diff.h), ms2, 'm', 'o', 'LineWidth',0.5);
-legend(H,'Reject Null Hypothesis', 'Location','nw','FontSize',fs,'FontName','Times');
+legend(H,'Reject Null Hypothesis', 'Location','sw','FontSize',fs,'FontName','Times');
 
 xlabel('Angular Insertion Depth (\circ)','FontWeight','bold','FontSize',fs,'FontName','Times'); 
 ylabel('\Delta||F|| (mN)','FontWeight','bold','FontSize',fs,'FontName','Times');
@@ -183,11 +184,12 @@ ylabel('\Delta||F|| (mN)','FontWeight','bold','FontSize',fs,'FontName','Times');
 linkaxes(h_ax_t, 'x');
 xlim([0, phantom_stats_trim.Fmag.bins(end)+5])
 % xlim([0,400])
-ylim([min(phantom_stats_trim.Fmag.diff.mean(not_nan) - phantom_stats_trim.Fmag.diff.std(not_nan) - 2), max(phantom_stats_trim.Fmag.diff.mean(not_nan) + phantom_stats_trim.Fmag.diff.std(not_nan) + 2)]) 
+% ylim([min(phantom_stats_trim.Fmag.diff.mean(not_nan) - phantom_stats_trim.Fmag.diff.std(not_nan) - 2), max(phantom_stats_trim.Fmag.diff.mean(not_nan) + phantom_stats_trim.Fmag.diff.std(not_nan) + 2)]) 
+ylim([-41,3]);
 fig = gcf;
 fig.PaperUnits = 'inches';
 fig.PaperSize = [8.5 11];
-fig.PaperPosition = [0 0 10.5 10.25]; % 10.5, 10.25 for poster; 3.5, 2.5 for paper
+fig.PaperPosition = [0 0 4 2.5]; % 10.5, 10.25 for poster; 3.5, 2.5 for paper
 saveas(fig,'saved figures\binned_phantom.pdf');
 
 
