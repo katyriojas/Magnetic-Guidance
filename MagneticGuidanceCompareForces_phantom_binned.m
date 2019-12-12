@@ -104,11 +104,11 @@ end
 hf_avg_binned_trimmed = figure;
 % hf_avg_binned_trimmed.WindowState = "maximized";
 
-line_width = 2;
+line_width = 1;
 alpha_std = 0.22;
 ms = 20; % default 20;
 ms2 = 10; % default 10;
-fs = 9; %pnt
+fs = 8; %pnt
 
 h_ax_t(1) = subplot_er(2,1,1);
 grid on; hold on;
@@ -150,7 +150,7 @@ for i_trial = 1:length(data_robotic_phantom_trim)
 end
 
 ylabel('||F|| (mN)','FontName','Times','FontWeight','bold','FontSize',fs);
-legend('Manual','Robotic','Robotic &\newlineMagnetic Steering', 'Location','nw','FontSize',fs,'FontName','Times');
+legend('Manual','Robotic','Robotic &\newlineMagnetic Steering', 'Location','nw','FontSize',fs-1,'FontName','Times');
 % ylim([-10, h_ax_t(1).YLim(2)])
 ylim([-10,143]);
 yticks([0,25,50,75,100,125]);
@@ -176,7 +176,7 @@ fill([phantom_stats_trim.Fmag.bins(not_nan), fliplr(phantom_stats_trim.Fmag.bins
 
 % mark t-test significant points
 H = scatter(phantom_stats_trim.Fmag.bins(phantom_stats_trim.Fmag.diff.h), phantom_stats_trim.Fmag.diff.mean(phantom_stats_trim.Fmag.diff.h), ms2, 'm', 'o', 'LineWidth',0.5);
-legend(H,'Reject Null Hypothesis', 'Location','sw','FontSize',fs,'FontName','Times');
+legend(H,'Reject Null Hypothesis', 'Location','sw','FontSize',fs-1,'FontName','Times');
 
 xlabel('Angular Insertion Depth (\circ)','FontWeight','bold','FontSize',fs,'FontName','Times'); 
 ylabel('\Delta||F|| (mN)','FontWeight','bold','FontSize',fs,'FontName','Times');

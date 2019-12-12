@@ -127,11 +127,11 @@ end
 hf_avg_cadaver_binned = figure;
 % hf_avg_cadaver_binned.WindowState = "maximized";
 
-line_width = 2;
+line_width = 1;
 alpha_std = 0.22;
 ms = 20; % default 20;
 ms2 = 10; % default 10;
-fs = 9; %pnt
+fs = 8; %pnt
 
 h_ax_t(1) = subplot_er(2,1,1);
 grid on; hold on;
@@ -164,8 +164,9 @@ for i_trial = 1:length(data_robotic_cadaver)
 end
 
 ylabel('||F|| (mN)','FontName','Times','FontWeight','bold','FontSize',fs);
-legend('Robotic','Robotic & Magnetic Steering', 'Location','nw','FontSize',fs,'FontName','Times');
-ylim([-10, 143])
+legend('Robotic','Robotic & Magnetic Steering', 'Location','nw','FontSize',fs-1,'FontName','Times');
+ylim([-10, 143]);
+xlim([0, cadaver_stats.Fmag.bins(end)+0.5]);
 yticks([0,25,50,75,100,125]);
 
 % Plot delta F between guided/unguided robotic insertion means
@@ -184,13 +185,13 @@ fill([cadaver_stats.Fmag.bins(not_nan), fliplr(cadaver_stats.Fmag.bins(not_nan))
 
 % mark t-test significant points
 H = scatter(cadaver_stats.Fmag.bins(cadaver_stats.Fmag.diff.h), cadaver_stats.Fmag.diff.mean(cadaver_stats.Fmag.diff.h), ms2, 'm', 'o', 'LineWidth',0.5);
-legend(H,'Reject Null Hypothesis', 'Location','sw','FontSize',fs,'FontName','Times');
+legend(H,'Reject Null Hypothesis', 'Location','sw','FontSize',fs-1,'FontName','Times');
 
 xlabel('Linear Insertion Depth (mm)','FontWeight','bold','FontSize',fs,'FontName','Times'); 
 ylabel('\Delta ||F|| (mN)','FontWeight','bold','FontSize',fs,'FontName','Times');
 
 linkaxes(h_ax_t, 'x');
-% xlim([0, cadaver_stats.Fmag.bins(end)+5])
+xlim([0, cadaver_stats.Fmag.bins(end)+0.5]);
 % ylim([min(cadaver_stats.Fmag.diff.mean(not_nan) - cadaver_stats.Fmag.diff.std(not_nan) - 2), max(cadaver_stats.Fmag.diff.mean(not_nan) + cadaver_stats.Fmag.diff.std(not_nan) + 2)]) 
 ylim([-41,3]);
 fig = gcf;

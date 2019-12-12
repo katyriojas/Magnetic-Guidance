@@ -526,7 +526,8 @@ end
 
 %% Generate plan plot
 figure(22); clf(22); 
-grid on; hold on;
+xlimit = 27.05;
+subplot(2,1,1); grid on; hold on;
 set(gca,'FontSize',9,'FontName','Times');
 
 plot(insertion_depth, currents.scaled(1,:), 'LineWidth',1.5,'Color','r')
@@ -534,30 +535,25 @@ plot(insertion_depth, currents.scaled(2,:), 'LineWidth',1.5,'Color','g')
 plot(insertion_depth, currents.scaled(3,:), 'LineWidth',1.5,'Color','b')
 
 legend('Ix','Iy','Iz', 'Location','nw','FontSize',9,'FontName','Times'); 
-xlim([0,27]);
-xlabel('Distance Along Cochlea Path (mm)','FontSize',9,'FontName','Times','FontWeight','bold');
+xlim([0,xlimit]);
+set(gca,'xticklabel',{[]});
+yticks([-50,-25,0,25,50]); %[A]
 ylabel('Current (A)','FontSize',9,'FontName','Times','FontWeight','bold');
 
-h_currents_figure = gcf; 
-h_currents_figure.PaperUnits = 'inches';
-h_currents_figure.PaperSize = [8.5 11];
-h_currents_figure.PaperPosition = [0 0 3.5 1];
-saveas(h_currents_figure,'saved figures\currents_plan.pdf');
-
-figure(23); clf(23); grid on; hold on;
+subplot(2,1,2); grid on; hold on;
 set(gca,'FontSize',9,'FontName','Times');
 plot(insertion_depth, Bmag*1e3, 'Color','k','LineWidth',1.5);
 scatter(params.start_depth,params.Bmag_start*1000,5,'filled','MarkerFaceColor','k','MarkerEdgeColor','k');
 scatter(params.ramp_start,params.Bmag_start*1000,5,'filled','MarkerFaceColor','k','MarkerEdgeColor','k');
 scatter(params.ramp_end,params.Bmag_end*1000,5,'filled','MarkerFaceColor','k','MarkerEdgeColor','k');
 ylim([0,100]);
-xlim([0,27]);
-xlabel('Insertion Depth (mm)','FontSize',9,'FontName','Times','FontWeight','bold');
-ylabel('Magnetic Field Magnitude (mT)','FontSize',9,'FontName','Times','FontWeight','bold');
-
+yticks([0,25,50,75,100]); %[mT]
+xlim([0,xlimit]); % [mm]
+xlabel('Insertion Depth (mm)','FontSize',8,'FontName','Times','FontWeight','bold');
+ylabel('||b|| (mT)','FontSize',8,'FontName','Times','FontWeight','bold');
 
 h_Bmag_figure = gcf; 
 h_Bmag_figure.PaperUnits = 'inches';
 h_Bmag_figure.PaperSize = [8.5 11];
-h_Bmag_figure.PaperPosition = [0 0 3.5 1];
-saveas(h_Bmag_figure,'saved figures\Bmag_plan.pdf');
+h_Bmag_figure.PaperPosition = [0 0 3.8 1.7];
+saveas(h_Bmag_figure,'saved figures\currents_Bmag_plan.pdf');

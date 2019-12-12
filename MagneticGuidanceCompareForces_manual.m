@@ -156,10 +156,11 @@ legend('Trial 1','Trial 2','Trial 3','Trial 4');
 figure(3); clf(3); grid on; hold on; 
 % title('Trimmed Cadaver Manual Trials N = 3');
 xlabel('Insertion Time (s)','FontWeight','bold','FontSize',8,'FontName','Times'); 
-ylabel('Force (mN)','FontWeight','bold','FontSize',8,'FontName','Times');
-xlim([0,max_manual_cadaverX]);
-ylim([0,max_manual_cadaverY]);
-set(gca,'FontSize',9,'FontName','Times');
+ylabel('||F|| (mN)','FontWeight','bold','FontSize',8,'FontName','Times');
+xlim([0,max_manual_cadaverX+1]);
+ylim([0,max_manual_cadaverY+1]);
+yticks([0,25,50,75,100,125]);
+set(gca,'FontSize',8,'FontName','Times');
 
 for ii = 1:size(data_manual_cadaver,2)
     plot(data_manual_cadaver(ii).time_trimmed,...
@@ -168,11 +169,11 @@ for ii = 1:size(data_manual_cadaver,2)
          line_style_mat{ii});
 end
 
-legend('Insertion 1','Insertion 2','Insertion 3','Location','northwest','FontSize',8,'FontName','Times');
+legend('Insertion 1','Insertion 2','Insertion 3','Location','northwest','FontSize',7,'FontName','Times');
 fig = gcf;
 fig.PaperUnits = 'inches';
-fig.PaperPosition = [0 0 3.75 1.5];
-saveas(fig,'saved figures\ManualCadavervs.Time.pdf');
+fig.PaperPosition = [0 0 3.8 1.4];
+saveas(fig,'saved figures\cadaver_manualvstime.pdf');
 
 %% Plot 3: XYZ Plots using trimmed data
 figure(4); clf(4); hold on; grid on;

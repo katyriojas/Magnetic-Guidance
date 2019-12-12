@@ -65,11 +65,11 @@ if exist('hf_AID','var')
     end
 end
 
-hf_AID = figure;
-hold on
-
-fs = 10; % font size
+fs = 8; % font size
 ms = 40; % marker size
+
+hf_AID = figure;
+hold on; set(gca,'FontSize',fs,'FontName','Times');
 
 title('Final Angular Insertion Depths')
 
@@ -112,11 +112,18 @@ scatter(repmat(ctr(6),[1 3]), AID.cadaver.mag,    ms, 'k', 'o', 'LineWidth',1);
 
 % add labels etc.
 xticks([1 2])
-xticklabels({'Phantom', 'Cadaver'})
+xticklabels({'Phantom (N = 4)','Cadaver (N = 3)'});
+bar_x_label = get(gca,'XTickLabel');
+set(gca,'XTickLabel',bar_x_label,'FontName','Times','FontSize',fs);
 ylabel('Angular Insertion Depth (\circ)', 'FontWeight','bold', 'FontSize',fs, 'FontName','Times'); 
-legend('Manual','Robotic','Robotic &\newlineMagnetic Steering', 'Location','nw', 'FontName','Times', 'FontSize',fs);
+legend('Manual','Robotic','Robotic &\newlineMagnetic Steering', 'Location','best', 'FontName','Times', 'FontSize',fs);
 set(gca,'YGrid','on')
 
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperSize = [8.5 11];
+fig.PaperPosition = [0 0 4 1.3]; % 10.5, 10.25 for poster; 3.5, 2.5 for paper
+saveas(fig,'saved figures\aid_bar_graph.pdf');
 
 %% Bar Graph of Peak Forces
 % if exist('hf_Fpeak','var')
@@ -161,5 +168,3 @@ set(gca,'YGrid','on')
 % xticklabels({'Phantom', 'Cadaver'})
 % ylabel('||F|| (mN)','FontName','Times','FontWeight','bold');
 % legend('Manual','Robotic','Robotic &\newlineMagnetic Steering', 'Location','best','FontName','Times');
-
-
