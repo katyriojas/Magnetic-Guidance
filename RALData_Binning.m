@@ -189,6 +189,9 @@ for i_bin = 1:length(phantom_stats_trim.Fmag.bins)
     % compute mean difference between manual/robotic
     phantom_stats_trim.Fmag.diff.mean(i_bin) = phantom_stats_trim.Fmag.mean.mag(i_bin) - phantom_stats_trim.Fmag.mean.nomag(i_bin);
 
+    % percent force reduction
+    phantom_stats_trim.Fmag.diff.pct(i_bin) = 100 * phantom_stats_trim.Fmag.diff.mean(i_bin) ./ phantom_stats_trim.Fmag.mean.nomag(i_bin);
+
     % compute standard error of the difference between means
     phantom_stats_trim.Fmag.diff.std(i_bin) = sqrt( (phantom_stats_trim.Fmag.std.nomag(i_bin)^2) / length(nomag_mea_binned(i_bin).Fmags) ...
                                                     + (phantom_stats_trim.Fmag.std.mag(i_bin)^2) / length(mag_binned(i_bin).Fmags) );

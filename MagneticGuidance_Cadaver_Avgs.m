@@ -2,7 +2,7 @@
 % This script plots the averages from the robotic cadaver trials
 
 % Last Updated: 11/19/19
-regenerate_robotic_cadaver_data = true;
+regenerate_robotic_cadaver_data = false;
 
 if regenerate_robotic_cadaver_data
     LoadRALData_Robotic_Cadaver;
@@ -114,6 +114,8 @@ end
 cadaver_stats.Fmag.diff.h(isnan(cadaver_stats.Fmag.diff.h)) = 0;
 cadaver_stats.Fmag.diff.h = logical(cadaver_stats.Fmag.diff.h);
 
+% percent force reduction
+cadaver_stats.Fmag.diff.pct = 100 * cadaver_stats.Fmag.diff.mean ./ cadaver_stats.Fmag.mean.nomag;
 
 
 %% Plot Averaged Fmag vs AID (trimmed)
